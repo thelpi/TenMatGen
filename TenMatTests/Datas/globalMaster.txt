@@ -1,0 +1,161 @@
+﻿Point for server  !  0/0 | 15 - 0
+Point for server  !  0/0 | 30 - 0
+Point for server  !  0/0 | 40 - 0
+Point for receiver ! 0/0 | 40 - 15
+Point for server  !  1/0 | 0 - 0
+Point for server  !  1/0 | 0 - 15
+Point for server  !  1/0 | 0 - 30
+Point for receiver ! 1/0 | 15 - 30
+Point for server  !  1/0 | 15 - 40
+Point for server  !  1/1 | 0 - 0
+Point for server  !  1/1 | 15 - 0
+Point for server  !  1/1 | 30 - 0
+Point for server  !  1/1 | 40 - 0
+Point for receiver ! 1/1 | 40 - 15
+Point for server  !  2/1 | 0 - 0
+Point for server  !  2/1 | 0 - 15
+Point for server  !  2/1 | 0 - 30
+Point for server  !  2/1 | 0 - 40
+Point for receiver ! 2/1 | 15 - 40
+Point for receiver ! 2/1 | 30 - 40
+Point for receiver ! 2/1 | 40 - 40
+Point for server  !  2/1 | 40 - 40 (A)
+Point for server  !  2/2 | 0 - 0
+Point for server  !  2/2 | 15 - 0
+Point for receiver ! 2/2 | 15 - 15
+Point for server  !  2/2 | 30 - 15
+Point for receiver ! 2/2 | 30 - 30
+Point for server  !  2/2 | 40 - 30
+Point for receiver ! 2/2 | 40 - 40
+Point for receiver ! 2/2 | 40 - 40 (A)
+Point for server  !  2/2 | 40 - 40
+Point for receiver ! 2/2 | 40 - 40 (A)
+Point for server  !  2/2 | 40 - 40
+Point for server  !  2/2 | 40 (A) - 40
+Point for receiver ! 2/2 | 40 - 40
+Point for receiver ! 2/2 | 40 - 40 (A)
+Point for receiver ! 2/3 | 0 - 0
+Point for server  !  2/3 | 0 - 15
+Point for server  !  2/3 | 0 - 30
+Point for server  !  2/3 | 0 - 40
+Point for server  !  2/4 | 0 - 0
+Point for receiver ! 2/4 | 0 - 15
+Point for server  !  2/4 | 15 - 15
+Point for server  !  2/4 | 30 - 15
+Point for server  !  2/4 | 40 - 15
+Point for server  !  3/4 | 0 - 0
+Point for server  !  3/4 | 0 - 15
+Point for server  !  3/4 | 0 - 30
+Point for server  !  3/4 | 0 - 40
+Point for server  !  3/5 | 0 - 0
+Point for server  !  3/5 | 15 - 0
+Point for server  !  3/5 | 30 - 0
+Point for server  !  3/5 | 40 - 0
+Point for server  !  4/5 | 0 - 0
+Point for server  !  4/5 | 0 - 15
+Point for server  !  4/5 | 0 - 30
+Point for receiver ! 4/5 | 15 - 30
+Point for server  !  4/5 | 15 - 40
+Point for receiver ! 4/5 | 30 - 40
+Point for server  !  4/6 0/0 | 0 - 0
+Point for server  !  4/6 0/0 | 15 - 0
+Point for server  !  4/6 0/0 | 30 - 0
+Point for server  !  4/6 0/0 | 40 - 0
+Point for server  !  4/6 1/0 | 0 - 0
+Point for server  !  4/6 1/0 | 0 - 15
+Point for server  !  4/6 1/0 | 0 - 30
+Point for server  !  4/6 1/0 | 0 - 40
+Point for server  !  4/6 1/1 | 0 - 0
+Point for receiver ! 4/6 1/1 | 0 - 15
+Point for receiver ! 4/6 1/1 | 0 - 30
+Point for receiver ! 4/6 1/1 | 0 - 40
+Point for server  !  4/6 1/1 | 15 - 40
+Point for server  !  4/6 1/1 | 30 - 40
+Point for server  !  4/6 1/1 | 40 - 40
+Point for server  !  4/6 1/1 | 40 (A) - 40
+Point for receiver ! 4/6 1/1 | 40 - 40
+Point for server  !  4/6 1/1 | 40 (A) - 40
+Point for receiver ! 4/6 1/1 | 40 - 40
+Point for receiver ! 4/6 1/1 | 40 - 40 (A)
+Point for server  !  4/6 1/1 | 40 - 40
+Point for server  !  4/6 1/1 | 40 (A) - 40
+Point for server  !  4/6 2/1 | 0 - 0
+Point for server  !  4/6 2/1 | 0 - 15
+Point for server  !  4/6 2/1 | 0 - 30
+Point for server  !  4/6 2/1 | 0 - 40
+Point for server  !  4/6 2/2 | 0 - 0
+Point for server  !  4/6 2/2 | 15 - 0
+Point for server  !  4/6 2/2 | 30 - 0
+Point for server  !  4/6 2/2 | 40 - 0
+Point for receiver ! 4/6 2/2 | 40 - 15
+Point for receiver ! 4/6 2/2 | 40 - 30
+Point for receiver ! 4/6 2/2 | 40 - 40
+Point for server  !  4/6 2/2 | 40 (A) - 40
+Point for server  !  4/6 3/2 | 0 - 0
+Point for receiver ! 4/6 3/2 | 15 - 0
+Point for server  !  4/6 3/2 | 15 - 15
+Point for receiver ! 4/6 3/2 | 30 - 15
+Point for server  !  4/6 3/2 | 30 - 30
+Point for server  !  4/6 3/2 | 30 - 40
+Point for server  !  4/6 3/3 | 0 - 0
+Point for server  !  4/6 3/3 | 15 - 0
+Point for server  !  4/6 3/3 | 30 - 0
+Point for server  !  4/6 3/3 | 40 - 0
+Point for server  !  4/6 4/3 | 0 - 0
+Point for server  !  4/6 4/3 | 0 - 15
+Point for server  !  4/6 4/3 | 0 - 30
+Point for server  !  4/6 4/3 | 0 - 40
+Point for server  !  4/6 4/4 | 0 - 0
+Point for server  !  4/6 4/4 | 15 - 0
+Point for server  !  4/6 4/4 | 30 - 0
+Point for receiver ! 4/6 4/4 | 30 - 15
+Point for server  !  4/6 4/4 | 40 - 15
+Point for server  !  4/6 5/4 | 0 - 0
+Point for receiver ! 4/6 5/4 | 15 - 0
+Point for receiver ! 4/6 5/4 | 30 - 0
+Point for server  !  4/6 5/4 | 30 - 15
+Point for receiver ! 4/6 5/4 | 40 - 15
+Point for server  !  4/6 5/4 | 40 - 30
+Point for receiver ! 4/6 6/4 0/0 | 0 - 0
+Point for server  !  4/6 6/4 0/0 | 15 - 0
+Point for receiver ! 4/6 6/4 0/0 | 15 - 15
+Point for server  !  4/6 6/4 0/0 | 30 - 15
+Point for server  !  4/6 6/4 0/0 | 40 - 15
+Point for server  !  4/6 6/4 1/0 | 0 - 0
+Point for server  !  4/6 6/4 1/0 | 0 - 15
+Point for server  !  4/6 6/4 1/0 | 0 - 30
+Point for server  !  4/6 6/4 1/0 | 0 - 40
+Point for server  !  4/6 6/4 1/1 | 0 - 0
+Point for server  !  4/6 6/4 1/1 | 15 - 0
+Point for server  !  4/6 6/4 1/1 | 30 - 0
+Point for server  !  4/6 6/4 1/1 | 40 - 0
+Point for receiver ! 4/6 6/4 1/1 | 40 - 15
+Point for server  !  4/6 6/4 2/1 | 0 - 0
+Point for receiver ! 4/6 6/4 2/1 | 15 - 0
+Point for receiver ! 4/6 6/4 2/1 | 30 - 0
+Point for server  !  4/6 6/4 2/1 | 30 - 15
+Point for receiver ! 4/6 6/4 2/1 | 40 - 15
+Point for server  !  4/6 6/4 2/1 | 40 - 30
+Point for receiver ! 4/6 6/4 3/1 | 0 - 0
+Point for server  !  4/6 6/4 3/1 | 15 - 0
+Point for server  !  4/6 6/4 3/1 | 30 - 0
+Point for server  !  4/6 6/4 3/1 | 40 - 0
+Point for receiver ! 4/6 6/4 3/1 | 40 - 15
+Point for server  !  4/6 6/4 4/1 | 0 - 0
+Point for server  !  4/6 6/4 4/1 | 0 - 15
+Point for server  !  4/6 6/4 4/1 | 0 - 30
+Point for server  !  4/6 6/4 4/1 | 0 - 40
+Point for server  !  4/6 6/4 4/2 | 0 - 0
+Point for server  !  4/6 6/4 4/2 | 15 - 0
+Point for server  !  4/6 6/4 4/2 | 30 - 0
+Point for server  !  4/6 6/4 4/2 | 40 - 0
+Point for server  !  4/6 6/4 5/2 | 0 - 0
+Point for server  !  4/6 6/4 5/2 | 0 - 15
+Point for server  !  4/6 6/4 5/2 | 0 - 30
+Point for server  !  4/6 6/4 5/2 | 0 - 40
+Point for server  !  4/6 6/4 5/3 | 0 - 0
+Point for server  !  4/6 6/4 5/3 | 15 - 0
+Point for server  !  4/6 6/4 5/3 | 30 - 0
+Point for server  !  4/6 6/4 5/3 | 40 - 0
+Point for server  !  4/6 6/4 6/3 | 0 - 0
+Fin du match !

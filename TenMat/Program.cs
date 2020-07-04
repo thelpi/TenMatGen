@@ -2,33 +2,74 @@
 
 namespace TenMat
 {
-    class Program
+    public class Program
     {
-        static readonly Random _rdm = new Random();
-
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            MatchScoreboard ms = new MatchScoreboard(3, false);
+            MatchScoreboard ms = new MatchScoreboard(false);
+            SimulateMatch(ms, new Logger(), new Random(), true, 0.7);
+        }
+
+        public static void SimulateMatch(MatchScoreboard ms, ILogger logger, Random rdm, bool sleep, double serverRatio)
+        {
+            if (ms == null)
+            {
+                throw new ArgumentNullException(nameof(ms));
+            }
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            if (rdm == null)
+            {
+                throw new ArgumentNullException(nameof(rdm));
+            }
+
+            if (serverRatio <= 0 || serverRatio >= 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(serverRatio), serverRatio, "The parameter should be greater than zero and lower than one.");
+            }
 
             while (!ms.IsClosed)
             {
-                int rdm = _rdm.Next(1, 11);
-                if (rdm <= 3)
+                double rdmValue = rdm.NextDouble();
+                if (rdmValue >= serverRatio)
                 {
                     ms.AddReceiverPoint();
-                    Console.WriteLine("Point for receiver ! " + ms.ToString());
+                    logger.Log("Point for receiver ! " + ms.ToString());
                 }
                 else
                 {
                     ms.AddServerPoint();
-                    Console.WriteLine("Point for server  !  " + ms.ToString());
+                    logger.Log("Point for server  !  " + ms.ToString());
                 }
-                
-                System.Threading.Thread.Sleep(200);
+
+                if (sleep)
+                {
+                    System.Threading.Thread.Sleep(200);
+                }
             }
 
-            Console.WriteLine("Fin du match !");
-            System.Threading.Thread.Sleep(int.MaxValue);
+            logger.Log("Fin du match !");
+            if (sleep)
+            {
+                System.Threading.Thread.Sleep(int.MaxValue);
+            }
+        }
+    }
+
+    public interface ILogger
+    {
+        void Log(string log);
+    }
+
+    public class Logger : ILogger
+    {
+        public void Log(string log)
+        {
+            Console.WriteLine(log);
         }
     }
 }

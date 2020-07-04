@@ -104,8 +104,7 @@ namespace TenMat
             {
 
             }
-            else*/
-            
+            else */
             if (currentSetDatas.Any(v => v >= 6) && Math.Abs(currentSetDatas[0] - currentSetDatas[1]) > 1)
             {
                 if (_sets.Count(set => set[gameWinnerIndex] > set[1 - gameWinnerIndex]) == (BestOf + 1) / 2)

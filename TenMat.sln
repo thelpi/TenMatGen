@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TenMat", "TenMat\TenMat.csproj", "{E86D84EC-24F4-4A93-ABFC-1A156791228E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TenMatTests", "TenMatTests\TenMatTests.csproj", "{64F69DD9-B403-40EF-BAA2-AEFA5EF232AC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{E86D84EC-24F4-4A93-ABFC-1A156791228E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E86D84EC-24F4-4A93-ABFC-1A156791228E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E86D84EC-24F4-4A93-ABFC-1A156791228E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64F69DD9-B403-40EF-BAA2-AEFA5EF232AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64F69DD9-B403-40EF-BAA2-AEFA5EF232AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64F69DD9-B403-40EF-BAA2-AEFA5EF232AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64F69DD9-B403-40EF-BAA2-AEFA5EF232AC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
