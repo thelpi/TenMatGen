@@ -16,8 +16,11 @@ namespace TenMat
         public static readonly int[] GamePoints = new int[] { 0, 15, 30, 40 };
 
         private readonly List<int[]> _sets;
+        private readonly List<int?> _tieBreaks;
         private readonly int[] _currentGamePt;
         private readonly bool[] _currentGameAdv;
+
+        private readonly int[] _currentTieBreakValues;
 
         /// <summary>
         /// Maximal number of sets.
@@ -64,6 +67,8 @@ namespace TenMat
             {
                 new [] { 0, 0 }
             };
+            _tieBreaks = new List<int?> { null };
+            _currentTieBreakValues = new int[2] { 0, 0 };
             CurrentServerIndex = p2AtServe ? 1 : 0;
             _currentGamePt = new int[2] { 0, 0 };
             _currentGameAdv = new bool[2] { false, false };
@@ -96,16 +101,15 @@ namespace TenMat
             var currentSetDatas = _sets.Last();
             currentSetDatas[gameWinnerIndex]++;
 
-            /*if (currentSetDatas.All(v => v == 6) && (_sets.Count < 5 || FifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At6_6))
+            if (currentSetDatas.All(v => v == 6) && (_sets.Count < 5 || FifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At6_6))
             {
-
+                _tieBreaks[_tieBreaks.Count - 1] = 0;
             }
             else if (currentSetDatas.All(v => v == 12) && _sets.Count == 5 && FifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At12_12)
             {
-
+                _tieBreaks[_tieBreaks.Count - 1] = 0;
             }
-            else */
-            if (currentSetDatas.Any(v => v >= 6) && Math.Abs(currentSetDatas[0] - currentSetDatas[1]) > 1)
+            else if (_tieBreaks.Last().HasValue || (currentSetDatas.Any(v => v >= 6) && Math.Abs(currentSetDatas[0] - currentSetDatas[1]) > 1))
             {
                 if (_sets.Count(set => set[gameWinnerIndex] > set[1 - gameWinnerIndex]) == (BestOf + 1) / 2)
                 {
@@ -115,6 +119,9 @@ namespace TenMat
                 else
                 {
                     _sets.Add(new[] { 0, 0 });
+                    _tieBreaks.Add(null);
+                    _currentTieBreakValues[0] = 0;
+                    _currentTieBreakValues[1] = 0;
                 }
             }
 
@@ -128,7 +135,24 @@ namespace TenMat
                 return;
             }
 
-            if (_currentGamePt[playerIndex] < GamePoints.Last())
+            if (_tieBreaks.Last().HasValue)
+            {
+                _currentTieBreakValues[playerIndex]++;
+
+                _tieBreaks[_tieBreaks.Count - 1] = _currentTieBreakValues[1 - playerIndex];
+
+                if ((_currentTieBreakValues[playerIndex] == 7
+                    && _currentTieBreakValues[1 - playerIndex] <= 5) || (_currentTieBreakValues[playerIndex] > 7
+                    && _currentTieBreakValues[1 - playerIndex] <= _currentTieBreakValues[playerIndex] - 2))
+                {
+                    AddGame(playerIndex);
+                }
+                else if (_currentTieBreakValues.Sum() % 2 == 1)
+                {
+                    CurrentServerIndex = 1 - CurrentServerIndex;
+                }
+            }
+            else if (_currentGamePt[playerIndex] < GamePoints.Last())
             {
                 _currentGamePt[playerIndex] = GamePoints[Array.IndexOf(GamePoints, _currentGamePt[playerIndex]) + 1];
             }
@@ -155,26 +179,38 @@ namespace TenMat
 
         public override string ToString()
         {
-            return string.Concat(string.Join(" ", _sets.Select(set => string.Concat(set[0], "/", set[1]))), " | ", _currentGamePt[0], _currentGameAdv[0] ? " (A)" : string.Empty, " - ", _currentGamePt[1], _currentGameAdv[1] ? " (A)" : string.Empty);
-        }
+            string setsScore = string.Join(" ", _sets.Select(set => string.Concat(set[0], "/", set[1])));
+            string currentGame = string.Empty;
+            string currentTb = string.Empty;
+            if (_tieBreaks.Last().HasValue)
+            {
+                currentTb = string.Concat(" | [", _currentTieBreakValues[0], "]-[", _currentTieBreakValues[1], "]");
+            }
+            else if (!IsClosed)
+            {
+                currentGame = string.Concat(" | ", _currentGamePt[0], _currentGameAdv[0] ? " (A)" : string.Empty, " - ", _currentGamePt[1], _currentGameAdv[1] ? " (A)" : string.Empty);
+            }
 
-        /// <summary>
-        /// Fifth set tie-break rules enumeration.
-        /// </summary>
-        public enum FifthSetTieBreakRuleEnum
-        {
-            /// <summary>
-            /// No tie-break / not applicable.
-            /// </summary>
-            None,
-            /// <summary>
-            /// Tie-break at 6 - 6.
-            /// </summary>
-            At6_6,
-            /// <summary>
-            /// Tie-break at 12 - 12.
-            /// </summary>
-            At12_12
+            return string.Concat(setsScore, currentGame, currentTb);
         }
+    }
+
+    /// <summary>
+    /// Fifth set tie-break rules enumeration.
+    /// </summary>
+    public enum FifthSetTieBreakRuleEnum
+    {
+        /// <summary>
+        /// No tie-break / not applicable.
+        /// </summary>
+        None,
+        /// <summary>
+        /// Tie-break at 6 - 6.
+        /// </summary>
+        At6_6,
+        /// <summary>
+        /// Tie-break at 12 - 12.
+        /// </summary>
+        At12_12
     }
 }

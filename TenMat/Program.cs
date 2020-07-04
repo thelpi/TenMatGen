@@ -4,13 +4,19 @@ namespace TenMat
 {
     public class Program
     {
+        private const int _msPause = 5;
+        private const double _serveRation = 0.7;
+        private const FifthSetTieBreakRuleEnum _fifthSetTieBreakRule = FifthSetTieBreakRuleEnum.None;
+        private const bool _p2AtServe = false;
+
         public static void Main(string[] args)
         {
-            MatchScoreboard ms = new MatchScoreboard(false);
-            SimulateMatch(ms, new Logger(), new Random(), true, 0.7);
+            MatchScoreboard ms = new MatchScoreboard(_p2AtServe, _fifthSetTieBreakRule);
+            SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);
         }
 
-        public static void SimulateMatch(MatchScoreboard ms, ILogger logger, Random rdm, bool sleep, double serverRatio)
+        public static void SimulateMatch(MatchScoreboard ms, ILogger logger,
+            Random rdm, int pause, double serverRatio)
         {
             if (ms == null)
             {
@@ -46,14 +52,14 @@ namespace TenMat
                     logger.Log("Point for server  !  " + ms.ToString());
                 }
 
-                if (sleep)
+                if (_msPause > 0)
                 {
-                    System.Threading.Thread.Sleep(200);
+                    System.Threading.Thread.Sleep(_msPause);
                 }
             }
 
             logger.Log("Fin du match !");
-            if (sleep)
+            if (_msPause > 0)
             {
                 System.Threading.Thread.Sleep(int.MaxValue);
             }
