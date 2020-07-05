@@ -89,22 +89,25 @@ namespace TenMat
             IsClosed = false;
         }
 
-        private void AddGame(int gameWinnerIndex)
+        private void AddPoint(int playerIndex)
         {
-            var set = _sets.Last();
-            set.AddGame(gameWinnerIndex);
+            if (IsClosed)
+            {
+                return;
+            }
 
-            if (set.BothAt6 && (_sets.Count < 5 || FifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At6_6))
+            var set = _sets.Last();
+
+            bool newSet = set.AddPoint(playerIndex, _sets.Count == 5, FifthSetTieBreakRule, out bool switchServer);
+
+            if (switchServer)
             {
-                _sets.Last().StartTieBreak();
+                CurrentServerIndex = 1 - CurrentServerIndex;
             }
-            else if (set.BothAt12 && _sets.Count == 5 && FifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At12_12)
+
+            if (newSet)
             {
-                _sets.Last().StartTieBreak();
-            }
-            else if (_sets.Last().HasTieBreak || set.IsOverWithoutTieBreak)
-            {
-                if (_sets.Count(s => s.IsWonBy(gameWinnerIndex)) == (BestOf + 1) / 2)
+                if (_sets.Count(s => s.IsWonBy(playerIndex)) == (BestOf + 1) / 2)
                 {
                     IsClosed = true;
                     return;
@@ -113,25 +116,6 @@ namespace TenMat
                 {
                     _sets.Add(new Set());
                 }
-            }
-
-            CurrentServerIndex = 1 - CurrentServerIndex;
-        }
-
-        private void AddPoint(int playerIndex)
-        {
-            if (IsClosed)
-            {
-                return;
-            }
-
-            if (_sets.Last().AddPoint(playerIndex, out bool switchServer))
-            {
-                AddGame(playerIndex);
-            }
-            if (switchServer)
-            {
-                CurrentServerIndex = 1 - CurrentServerIndex;
             }
         }
     }

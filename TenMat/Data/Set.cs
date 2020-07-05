@@ -14,6 +14,8 @@ namespace TenMat.Data
             new Game()
         };
 
+        private bool _readonly;
+
         /// <summary>
         /// Games for player one.
         /// </summary>
@@ -47,104 +49,6 @@ namespace TenMat.Data
         }
 
         /// <summary>
-        /// <c>True</c> if both players have six games.
-        /// </summary>
-        public bool BothAt6
-        {
-            get
-            {
-                return Games1 == 6 && Games2 == 6;
-            }
-        }
-
-        /// <summary>
-        /// <c>True</c> if both players have twelve games.
-        /// </summary>
-        public bool BothAt12
-        {
-            get
-            {
-                return Games1 == 12 && Games2 == 12;
-            }
-        }
-
-        /// <summary>
-        /// <c>True</c> if the set is over without tie-break.
-        /// </summary>
-        public bool IsOverWithoutTieBreak
-        {
-            get
-            {
-                return (Games1 >= 6 || Games2 >= 6) && Math.Abs(Games1 - Games2) > 1;
-            }
-        }
-
-        /// <summary>
-        /// Indicates if the server has to switch during the current tie-break.
-        /// </summary>
-        public bool IsTieBreakServerSwitch
-        {
-            get
-            {
-                return (TieBreakPoints1 + TieBreakPoints2) % 2 == 1;
-            }
-        }
-
-        /// <summary>
-        /// Is tie-break over.
-        /// </summary>
-        public bool IsTieBreakOver
-        {
-            get
-            {
-                return (TieBreakPoints1 == 7 && TieBreakPoints2 <= 5)
-                    || (TieBreakPoints1 > 7 && TieBreakPoints2 <= TieBreakPoints1 - 2)
-                    || (TieBreakPoints2 == 7 && TieBreakPoints1 <= 5)
-                    || (TieBreakPoints2 > 7 && TieBreakPoints1 <= TieBreakPoints2 - 2);
-            }
-        }
-
-        /// <summary>
-        /// Adds a game.
-        /// </summary>
-        /// <param name="playerIndex">Player index.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be one or zero.</exception>
-        public void AddGame(int playerIndex)
-        {
-            CheckPlayerIndex(playerIndex);
-
-            if (playerIndex == 1)
-            {
-                Games2++;
-            }
-            else
-            {
-                Games1++;
-            }
-
-            _games.Add(new Game());
-        }
-
-        /// <summary>
-        /// Adds a tie-break point.
-        /// </summary>
-        /// <param name="playerIndex">Player index.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be one or zero.</exception>
-        public void AddTieBreakPoint(int playerIndex)
-        {
-            CheckPlayerIndex(playerIndex);
-            
-            if (playerIndex == 1)
-            {
-                TieBreakPoints2++;
-            }
-            else
-            {
-                TieBreakPoints1++;
-            }
-        }
-
-        /// <summary>
         /// Indicates if the specified player has won the set.
         /// </summary>
         /// <param name="playerIndex">Player index.</param>
@@ -160,43 +64,53 @@ namespace TenMat.Data
         }
 
         /// <summary>
-        /// Starts a tie-break.
-        /// </summary>
-        public void StartTieBreak()
-        {
-            HasTieBreak = true;
-        }
-
-        /// <summary>
         /// Adds a point to the current game.
         /// </summary>
-        /// <param name="playerIndex"></param>
-        /// <param name="switchServer"></param>
-        /// <returns></returns>
-        public bool AddPoint(int playerIndex, out bool switchServer)
+        /// <param name="playerIndex">Player index.</param>
+        /// <param name="isFifthSet"><c>True</c> if it's the fifth set.</param>
+        /// <param name="fifthSetTieBreakRule">The tie-break rule for the fifth set.</param>
+        /// <param name="switchServer">Out; <c>True</c> if server has to switch.</param>
+        /// <returns><c>True</c> if the set ends.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be one or zero.</exception>
+        /// <exception cref="InvalidOperationException">The instance is read-only.</exception>
+        public bool AddPoint(int playerIndex, bool isFifthSet, FifthSetTieBreakRuleEnum fifthSetTieBreakRule, out bool switchServer)
         {
             CheckPlayerIndex(playerIndex);
+
+            if (_readonly)
+            {
+                throw new InvalidOperationException("The instance is read-only.");
+            }
 
             switchServer = false;
 
             if (HasTieBreak)
             {
-                AddTieBreakPoint(playerIndex);
-                if (IsTieBreakOver)
+                if (playerIndex == 1)
                 {
-                    return true;
+                    TieBreakPoints2++;
                 }
-                else if (IsTieBreakServerSwitch)
+                else
+                {
+                    TieBreakPoints1++;
+                }
+                if ((TieBreakPoints1 == 7 && TieBreakPoints2 <= 5)
+                    || (TieBreakPoints1 > 7 && TieBreakPoints2 <= TieBreakPoints1 - 2)
+                    || (TieBreakPoints2 == 7 && TieBreakPoints1 <= 5)
+                    || (TieBreakPoints2 > 7 && TieBreakPoints1 <= TieBreakPoints2 - 2))
+                {
+                    switchServer = true;
+                    return AddGame(playerIndex, isFifthSet, fifthSetTieBreakRule);
+                }
+                else if ((TieBreakPoints1 + TieBreakPoints2) % 2 == 1)
                 {
                     switchServer = true;
                 }
             }
-            else
+            else if (CurrentGame.AddPoint(playerIndex))
             {
-                if (_games.Last().AddPoint(playerIndex))
-                {
-                    return true;
-                }
+                switchServer = true;
+                return AddGame(playerIndex, isFifthSet, fifthSetTieBreakRule);
             }
 
             return false;
@@ -208,6 +122,36 @@ namespace TenMat.Data
             {
                 throw new ArgumentOutOfRangeException(nameof(playerIndex), playerIndex, "The value should be one or zero.");
             }
+        }
+
+        private bool AddGame(int playerIndex, bool isFifthSet, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+        {
+            if (playerIndex == 1)
+            {
+                Games2++;
+            }
+            else
+            {
+                Games1++;
+            }
+
+            _games.Add(new Game());
+
+            if ((Games1 == 6 && Games2 == 6) && (!isFifthSet || fifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At6_6))
+            {
+                HasTieBreak = true;
+            }
+            else if ((Games1 == 12 && Games2 == 12) && isFifthSet && fifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At12_12)
+            {
+                HasTieBreak = true;
+            }
+            else if (HasTieBreak || ((Games1 >= 6 || Games2 >= 6) && Math.Abs(Games1 - Games2) > 1))
+            {
+                _readonly = true;
+                return true;
+            }
+
+            return false;
         }
     }
 }
