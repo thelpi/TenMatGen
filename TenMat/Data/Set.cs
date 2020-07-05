@@ -14,8 +14,10 @@ namespace TenMat.Data
             new Game()
         };
 
-        private bool _readonly;
-
+        /// <summary>
+        /// Indicates if readonly (finished).
+        /// </summary>
+        public bool Readonly { get; private set; }
         /// <summary>
         /// Games for player one.
         /// </summary>
@@ -77,7 +79,7 @@ namespace TenMat.Data
         {
             CheckPlayerIndex(playerIndex);
 
-            if (_readonly)
+            if (Readonly)
             {
                 throw new InvalidOperationException("The instance is read-only.");
             }
@@ -116,6 +118,35 @@ namespace TenMat.Data
             return false;
         }
 
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            if (Readonly)
+            {
+                return string.Concat(Games1, TieBreakToString(TieBreakPoints1),
+                    "/", Games2, TieBreakToString(TieBreakPoints2));
+            }
+
+            var baseString = string.Concat(Games1, "/", Games2);
+            if (HasTieBreak)
+            {
+                baseString += string.Concat(" | [", TieBreakPoints1, "]-[", TieBreakPoints2, "]");
+            }
+            else
+            {
+                baseString += string.Concat(" | ", CurrentGame.ToString());
+            }
+
+            return baseString;
+        }
+
+        private string TieBreakToString(int tieBreakPoints)
+        {
+            return HasTieBreak
+                && Math.Min(TieBreakPoints1, TieBreakPoints2) == tieBreakPoints ?
+                    string.Concat("[", tieBreakPoints, "]") : string.Empty;
+        }
+
         private static void CheckPlayerIndex(int playerIndex)
         {
             if (playerIndex < 0 || playerIndex > 1)
@@ -147,7 +178,7 @@ namespace TenMat.Data
             }
             else if (HasTieBreak || ((Games1 >= 6 || Games2 >= 6) && Math.Abs(Games1 - Games2) > 1))
             {
-                _readonly = true;
+                Readonly = true;
                 return true;
             }
 

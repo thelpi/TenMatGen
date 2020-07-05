@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\BestOfEnum.cs" />
     <Compile Include="Data\FifthSetTieBreakRuleEnum.cs" />
     <Compile Include="Data\Game.cs" />
     <Compile Include="Data\Set.cs" />

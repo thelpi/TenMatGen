@@ -91,6 +91,22 @@ namespace TenMat.Data
             return false;
         }
 
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            if (_readonly)
+            {
+                return string.Empty;
+            }
+
+            return string.Concat(Points1, AdvantageToString(0), " - ", Points2, AdvantageToString(1));
+        }
+
+        private string AdvantageToString(int playerIndex)
+        {
+            return AdvantagePlayerIndex == playerIndex ? " (A)" : string.Empty;
+        }
+
         private static void CheckPlayerIndex(int playerIndex)
         {
             if (playerIndex < 0 || playerIndex > 1)

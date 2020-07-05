@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using TenMat.Data;
-using TenMat.Sql;
 
 namespace TenMat
 {
@@ -11,6 +9,7 @@ namespace TenMat
         private const double _serveRation = 0.8;
         private const FifthSetTieBreakRuleEnum _fifthSetTieBreakRule = FifthSetTieBreakRuleEnum.At12_12;
         private const bool _p2AtServe = false;
+        private const BestOfEnum bestOf = BestOfEnum.Five;
 
         public static void Main(string[] args)
         {
@@ -22,7 +21,7 @@ namespace TenMat
 
             sqlMap.LoadMatches(federer, DateTime.Now.AddYears(-5));*/
 
-            Scoreboard ms = new Scoreboard(_p2AtServe, _fifthSetTieBreakRule);
+            Scoreboard ms = new Scoreboard(bestOf, _p2AtServe, _fifthSetTieBreakRule);
             SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);
         }
 
@@ -49,7 +48,7 @@ namespace TenMat
                 throw new ArgumentOutOfRangeException(nameof(serverRatio), serverRatio, "The parameter should be greater than zero and lower than one.");
             }
 
-            while (!ms.IsClosed)
+            while (!ms.Readonly)
             {
                 double rdmValue = rdm.NextDouble();
                 if (rdmValue >= serverRatio)

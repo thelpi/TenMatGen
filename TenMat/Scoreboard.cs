@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TenMat.Data;
 
@@ -9,39 +10,38 @@ namespace TenMat
     /// </summary>
     public class Scoreboard
     {
-        private readonly List<Set> _sets;
+        private readonly List<Set> _sets = new List<Set> { new Set() };
 
         /// <summary>
-        /// Maximal number of sets.
+        /// <see cref="BestOfEnum"/> value.
         /// </summary>
-        public int BestOf { get; }
+        public BestOfEnum BestOf { get; }
+        /// <summary>
+        /// Tie-break rule for fifth set.
+        /// </summary>
+        public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; }
         /// <summary>
         /// Index of the current server.
         /// </summary>
         public int CurrentServerIndex { get; private set; }
-        /// <summary>
-        /// Indicates the scoreboard is closed.
-        /// </summary>
-        public bool IsClosed { get; private set; }
-        /// <summary>
-        /// Tie-break rule for fifth set.
-        /// </summary>
-        public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; private set; }
 
         /// <summary>
-        /// Constructor (best of 3).
+        /// Indicates if readonly (finished).
         /// </summary>
-        /// <param name="p2AtServe"><c>True</c> if the second player is the first server.</param>
-        public Scoreboard(bool p2AtServe)
-            : this(3, p2AtServe, FifthSetTieBreakRuleEnum.None) { }
+        public bool Readonly { get { return _sets.Last().Readonly; } }
 
         /// <summary>
-        /// Constructor (best of 5).
+        /// Constructor.
         /// </summary>
-        /// <param name="p2AtServe"><c>True</c> if the second player is the first server.</param>
+        /// <param name="bestOf"><see cref="BestOf"/> value.</param>
+        /// <param name="p2AtServe"><c>True</c> if the second player is the first to serve.</param>
         /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
-        public Scoreboard(bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
-            : this(5, p2AtServe, fifthSetTieBreakRule) { }
+        public Scoreboard(BestOfEnum bestOf, bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+        {
+            BestOf = bestOf;
+            FifthSetTieBreakRule = fifthSetTieBreakRule;
+            CurrentServerIndex = p2AtServe ? 1 : 0;
+        }
 
         /// <summary>
         /// Adds a point to the server.
@@ -62,38 +62,14 @@ namespace TenMat
         /// <inheritdoc />
         public override string ToString()
         {
-            string setsScore = string.Join(" ", _sets.Select(set => string.Concat(set.Games1, "/", set.Games2)));
-            string currentGame = string.Empty;
-            string currentTb = string.Empty;
-            if (_sets.Last().HasTieBreak)
-            {
-                currentTb = string.Concat(" | [", _sets.Last().TieBreakPoints1, "]-[", _sets.Last().TieBreakPoints2, "]");
-            }
-            else if (!IsClosed)
-            {
-                currentGame = string.Concat(" | ", _sets.Last().CurrentGame.Points1, _sets.Last().CurrentGame.AdvantagePlayerIndex == 0 ? " (A)" : string.Empty, " - ", _sets.Last().CurrentGame.Points2, _sets.Last().CurrentGame.AdvantagePlayerIndex == 1 ? " (A)" : string.Empty);
-            }
-
-            return string.Concat(setsScore, currentGame, currentTb);
-        }
-
-        private Scoreboard(byte bestOf, bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
-        {
-            BestOf = bestOf;
-            FifthSetTieBreakRule = fifthSetTieBreakRule;
-            _sets = new List<Set>
-            {
-                new Set()
-            };
-            CurrentServerIndex = p2AtServe ? 1 : 0;
-            IsClosed = false;
+            return string.Join(" - ", _sets.Select(set => set.ToString()));
         }
 
         private void AddPoint(int playerIndex)
         {
-            if (IsClosed)
+            if (Readonly)
             {
-                return;
+                throw new InvalidOperationException("The instance is readonly.");
             }
 
             var set = _sets.Last();
@@ -104,18 +80,9 @@ namespace TenMat
             {
                 CurrentServerIndex = 1 - CurrentServerIndex;
             }
-
-            if (newSet)
+            if (newSet && _sets.Count(s => s.IsWonBy(playerIndex)) != ((int)BestOf + 1) / 2)
             {
-                if (_sets.Count(s => s.IsWonBy(playerIndex)) == (BestOf + 1) / 2)
-                {
-                    IsClosed = true;
-                    return;
-                }
-                else
-                {
-                    _sets.Add(new Set());
-                }
+                _sets.Add(new Set());
             }
         }
     }

@@ -16,7 +16,7 @@ namespace TenMatTests
             var expectedLogs = GetExpectedLogs();
 
             var logger = new TestLogger();
-            Scoreboard ms = new Scoreboard(false);
+            Scoreboard ms = new Scoreboard(TenMat.Data.BestOfEnum.Three, false, TenMat.Data.FifthSetTieBreakRuleEnum.None);
             Program.SimulateMatch(ms, logger, new Random(1), 0, 0.7);
 
             logger.AssertLogs(expectedLogs);
