@@ -10,10 +10,8 @@ namespace TenMat
     /// </summary>
     public class Scoreboard
     {
-        private static readonly int[] GamePoints = new int[] { 0, 15, 30, 40 };
         private readonly List<Set> _sets;
-        private readonly int[] _currentGamePt;
-        private readonly bool[] _currentGameAdv;
+        private Game _game;
 
         /// <summary>
         /// Maximal number of sets.
@@ -75,7 +73,7 @@ namespace TenMat
             }
             else if (!IsClosed)
             {
-                currentGame = string.Concat(" | ", _currentGamePt[0], _currentGameAdv[0] ? " (A)" : string.Empty, " - ", _currentGamePt[1], _currentGameAdv[1] ? " (A)" : string.Empty);
+                currentGame = string.Concat(" | ", _game.Points1, _game.AdvantagePlayerIndex == 0 ? " (A)" : string.Empty, " - ", _game.Points2, _game.AdvantagePlayerIndex == 1 ? " (A)" : string.Empty);
             }
 
             return string.Concat(setsScore, currentGame, currentTb);
@@ -90,17 +88,13 @@ namespace TenMat
                 new Set()
             };
             CurrentServerIndex = p2AtServe ? 1 : 0;
-            _currentGamePt = new int[2] { 0, 0 };
-            _currentGameAdv = new bool[2] { false, false };
+            _game = new Game();
             IsClosed = false;
         }
 
         private void AddGame(int gameWinnerIndex)
         {
-            _currentGamePt[0] = 0;
-            _currentGamePt[1] = 0;
-            _currentGameAdv[0] = false;
-            _currentGameAdv[1] = false;
+            _game = new Game();
 
             var set = _sets.Last();
             set.AddGame(gameWinnerIndex);
@@ -151,27 +145,11 @@ namespace TenMat
                     CurrentServerIndex = 1 - CurrentServerIndex;
                 }
             }
-            else if (_currentGamePt[playerIndex] < GamePoints.Last())
-            {
-                _currentGamePt[playerIndex] = GamePoints[Array.IndexOf(GamePoints, _currentGamePt[playerIndex]) + 1];
-            }
             else
             {
-                if (_currentGameAdv[playerIndex])
+                if (_game.AddPoint(playerIndex))
                 {
                     AddGame(playerIndex);
-                }
-                else if (_currentGameAdv[1 - playerIndex])
-                {
-                    _currentGameAdv[1 - playerIndex] = false;
-                }
-                else if (_currentGamePt[1 - playerIndex] < GamePoints.Last())
-                {
-                    AddGame(playerIndex);
-                }
-                else
-                {
-                    _currentGameAdv[playerIndex] = true;
                 }
             }
         }

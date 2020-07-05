@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\FifthSetTieBreakRuleEnum.cs" />
+    <Compile Include="Data\Game.cs" />
     <Compile Include="Data\Set.cs" />
     <Compile Include="Sql\IDbCommandExtensions.cs" />
     <Compile Include="Data\LevelEnum.cs" />

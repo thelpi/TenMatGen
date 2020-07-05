@@ -8,7 +8,7 @@ namespace TenMat
     public class Program
     {
         private const int _msPause = 50;
-        private const double _serveRation = 0.9;
+        private const double _serveRation = 0.8;
         private const FifthSetTieBreakRuleEnum _fifthSetTieBreakRule = FifthSetTieBreakRuleEnum.At12_12;
         private const bool _p2AtServe = false;
 
