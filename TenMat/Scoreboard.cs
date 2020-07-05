@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using TenMat.Data;
 
@@ -11,7 +10,6 @@ namespace TenMat
     public class Scoreboard
     {
         private readonly List<Set> _sets;
-        private Game _game;
 
         /// <summary>
         /// Maximal number of sets.
@@ -73,7 +71,7 @@ namespace TenMat
             }
             else if (!IsClosed)
             {
-                currentGame = string.Concat(" | ", _game.Points1, _game.AdvantagePlayerIndex == 0 ? " (A)" : string.Empty, " - ", _game.Points2, _game.AdvantagePlayerIndex == 1 ? " (A)" : string.Empty);
+                currentGame = string.Concat(" | ", _sets.Last().CurrentGame.Points1, _sets.Last().CurrentGame.AdvantagePlayerIndex == 0 ? " (A)" : string.Empty, " - ", _sets.Last().CurrentGame.Points2, _sets.Last().CurrentGame.AdvantagePlayerIndex == 1 ? " (A)" : string.Empty);
             }
 
             return string.Concat(setsScore, currentGame, currentTb);
@@ -88,14 +86,11 @@ namespace TenMat
                 new Set()
             };
             CurrentServerIndex = p2AtServe ? 1 : 0;
-            _game = new Game();
             IsClosed = false;
         }
 
         private void AddGame(int gameWinnerIndex)
         {
-            _game = new Game();
-
             var set = _sets.Last();
             set.AddGame(gameWinnerIndex);
 
@@ -130,27 +125,13 @@ namespace TenMat
                 return;
             }
 
-            if (_sets.Last().HasTieBreak)
+            if (_sets.Last().AddPoint(playerIndex, out bool switchServer))
             {
-                var set = _sets.Last();
-
-                set.AddTieBreakPoint(playerIndex);
-
-                if (set.IsTieBreakOver)
-                {
-                    AddGame(playerIndex);
-                }
-                else if (set.IsTieBreakServerSwitch)
-                {
-                    CurrentServerIndex = 1 - CurrentServerIndex;
-                }
+                AddGame(playerIndex);
             }
-            else
+            if (switchServer)
             {
-                if (_game.AddPoint(playerIndex))
-                {
-                    AddGame(playerIndex);
-                }
+                CurrentServerIndex = 1 - CurrentServerIndex;
             }
         }
     }

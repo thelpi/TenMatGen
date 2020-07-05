@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TenMat.Data
 {
@@ -7,6 +9,11 @@ namespace TenMat.Data
     /// </summary>
     public class Set
     {
+        private readonly List<Game> _games = new List<Game>
+        {
+            new Game()
+        };
+
         /// <summary>
         /// Games for player one.
         /// </summary>
@@ -27,6 +34,17 @@ namespace TenMat.Data
         /// Indicates if the set ahs a tie-break.
         /// </summary>
         public bool HasTieBreak { get; private set; }
+
+        /// <summary>
+        /// Gets the current <see cref="Game"/>.
+        /// </summary>
+        public Game CurrentGame
+        {
+            get
+            {
+                return _games.Last();
+            }
+        }
 
         /// <summary>
         /// <c>True</c> if both players have six games.
@@ -103,6 +121,8 @@ namespace TenMat.Data
             {
                 Games1++;
             }
+
+            _games.Add(new Game());
         }
 
         /// <summary>
@@ -145,6 +165,41 @@ namespace TenMat.Data
         public void StartTieBreak()
         {
             HasTieBreak = true;
+        }
+
+        /// <summary>
+        /// Adds a point to the current game.
+        /// </summary>
+        /// <param name="playerIndex"></param>
+        /// <param name="switchServer"></param>
+        /// <returns></returns>
+        public bool AddPoint(int playerIndex, out bool switchServer)
+        {
+            CheckPlayerIndex(playerIndex);
+
+            switchServer = false;
+
+            if (HasTieBreak)
+            {
+                AddTieBreakPoint(playerIndex);
+                if (IsTieBreakOver)
+                {
+                    return true;
+                }
+                else if (IsTieBreakServerSwitch)
+                {
+                    switchServer = true;
+                }
+            }
+            else
+            {
+                if (_games.Last().AddPoint(playerIndex))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void CheckPlayerIndex(int playerIndex)
