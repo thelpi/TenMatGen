@@ -7,20 +7,20 @@ namespace TenMat
 {
     public class Program
     {
-        private const int _msPause = 5;
-        private const double _serveRation = 0.7;
-        private const FifthSetTieBreakRuleEnum _fifthSetTieBreakRule = FifthSetTieBreakRuleEnum.None;
+        private const int _msPause = 50;
+        private const double _serveRation = 0.9;
+        private const FifthSetTieBreakRuleEnum _fifthSetTieBreakRule = FifthSetTieBreakRuleEnum.At12_12;
         private const bool _p2AtServe = false;
 
         public static void Main(string[] args)
         {
-            SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
+            /*SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
 
             sqlMap.LoadPlayers(new DateTime(1970, 1, 1));
 
             var federer = Player.Instances.First(p => p.Name.ToLower().Contains("federer"));
 
-            sqlMap.LoadMatches(federer, DateTime.Now.AddYears(-5));
+            sqlMap.LoadMatches(federer, DateTime.Now.AddYears(-5));*/
 
             Scoreboard ms = new Scoreboard(_p2AtServe, _fifthSetTieBreakRule);
             SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);
@@ -63,14 +63,14 @@ namespace TenMat
                     logger.Log("Point for server  !  " + ms.ToString());
                 }
 
-                if (_msPause > 0)
+                if (pause > 0)
                 {
-                    System.Threading.Thread.Sleep(_msPause);
+                    System.Threading.Thread.Sleep(pause);
                 }
             }
 
             logger.Log("Fin du match !");
-            if (_msPause > 0)
+            if (pause > 0)
             {
                 System.Threading.Thread.Sleep(int.MaxValue);
             }
