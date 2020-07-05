@@ -1,25 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TenMat.Data;
 
 namespace TenMat
 {
     /// <summary>
     /// Represents the scoreboard of a tennis match.
     /// </summary>
-    /// <remarks>No tie-break at this point.</remarks>
-    public class MatchScoreboard
+    public class Scoreboard
     {
-        /// <summary>
-        /// Sorted list of points thresholds available during a single game.
-        /// </summary>
-        public static readonly int[] GamePoints = new int[] { 0, 15, 30, 40 };
-
+        private static readonly int[] GamePoints = new int[] { 0, 15, 30, 40 };
         private readonly List<int[]> _sets;
         private readonly List<int?> _tieBreaks;
         private readonly int[] _currentGamePt;
         private readonly bool[] _currentGameAdv;
-
         private readonly int[] _currentTieBreakValues;
 
         /// <summary>
@@ -38,7 +33,6 @@ namespace TenMat
         /// Tie-break rule for fifth set.
         /// </summary>
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; private set; }
-
         /// <summary>
         /// List of sets details.
         /// </summary>
@@ -48,7 +42,7 @@ namespace TenMat
         /// Constructor (best of 3).
         /// </summary>
         /// <param name="p2AtServe"><c>True</c> if the second player is the first server.</param>
-        public MatchScoreboard(bool p2AtServe)
+        public Scoreboard(bool p2AtServe)
             : this(3, p2AtServe, FifthSetTieBreakRuleEnum.None) { }
 
         /// <summary>
@@ -56,24 +50,8 @@ namespace TenMat
         /// </summary>
         /// <param name="p2AtServe"><c>True</c> if the second player is the first server.</param>
         /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
-        public MatchScoreboard(bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+        public Scoreboard(bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
             : this(5, p2AtServe, fifthSetTieBreakRule) { }
-
-        private MatchScoreboard(byte bestOf, bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
-        {
-            BestOf = bestOf;
-            FifthSetTieBreakRule = fifthSetTieBreakRule;
-            _sets = new List<int[]>
-            {
-                new [] { 0, 0 }
-            };
-            _tieBreaks = new List<int?> { null };
-            _currentTieBreakValues = new int[2] { 0, 0 };
-            CurrentServerIndex = p2AtServe ? 1 : 0;
-            _currentGamePt = new int[2] { 0, 0 };
-            _currentGameAdv = new bool[2] { false, false };
-            IsClosed = false;
-        }
 
         /// <summary>
         /// Adds a point to the server.
@@ -89,6 +67,40 @@ namespace TenMat
         public void AddReceiverPoint()
         {
             AddPoint(1 - CurrentServerIndex);
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            string setsScore = string.Join(" ", _sets.Select(set => string.Concat(set[0], "/", set[1])));
+            string currentGame = string.Empty;
+            string currentTb = string.Empty;
+            if (_tieBreaks.Last().HasValue)
+            {
+                currentTb = string.Concat(" | [", _currentTieBreakValues[0], "]-[", _currentTieBreakValues[1], "]");
+            }
+            else if (!IsClosed)
+            {
+                currentGame = string.Concat(" | ", _currentGamePt[0], _currentGameAdv[0] ? " (A)" : string.Empty, " - ", _currentGamePt[1], _currentGameAdv[1] ? " (A)" : string.Empty);
+            }
+
+            return string.Concat(setsScore, currentGame, currentTb);
+        }
+
+        private Scoreboard(byte bestOf, bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+        {
+            BestOf = bestOf;
+            FifthSetTieBreakRule = fifthSetTieBreakRule;
+            _sets = new List<int[]>
+            {
+                new [] { 0, 0 }
+            };
+            _tieBreaks = new List<int?> { null };
+            _currentTieBreakValues = new int[2] { 0, 0 };
+            CurrentServerIndex = p2AtServe ? 1 : 0;
+            _currentGamePt = new int[2] { 0, 0 };
+            _currentGameAdv = new bool[2] { false, false };
+            IsClosed = false;
         }
 
         private void AddGame(int gameWinnerIndex)
@@ -176,41 +188,5 @@ namespace TenMat
                 }
             }
         }
-
-        public override string ToString()
-        {
-            string setsScore = string.Join(" ", _sets.Select(set => string.Concat(set[0], "/", set[1])));
-            string currentGame = string.Empty;
-            string currentTb = string.Empty;
-            if (_tieBreaks.Last().HasValue)
-            {
-                currentTb = string.Concat(" | [", _currentTieBreakValues[0], "]-[", _currentTieBreakValues[1], "]");
-            }
-            else if (!IsClosed)
-            {
-                currentGame = string.Concat(" | ", _currentGamePt[0], _currentGameAdv[0] ? " (A)" : string.Empty, " - ", _currentGamePt[1], _currentGameAdv[1] ? " (A)" : string.Empty);
-            }
-
-            return string.Concat(setsScore, currentGame, currentTb);
-        }
-    }
-
-    /// <summary>
-    /// Fifth set tie-break rules enumeration.
-    /// </summary>
-    public enum FifthSetTieBreakRuleEnum
-    {
-        /// <summary>
-        /// No tie-break / not applicable.
-        /// </summary>
-        None,
-        /// <summary>
-        /// Tie-break at 6 - 6.
-        /// </summary>
-        At6_6,
-        /// <summary>
-        /// Tie-break at 12 - 12.
-        /// </summary>
-        At12_12
     }
 }

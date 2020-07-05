@@ -16,8 +16,8 @@ namespace TenMatTests
             var expectedLogs = GetExpectedLogs();
 
             var logger = new TestLogger();
-            MatchScoreboard ms = new MatchScoreboard(false);
-            Program.SimulateMatch(ms, logger, new Random(1), false, 0.7);
+            Scoreboard ms = new Scoreboard(false);
+            Program.SimulateMatch(ms, logger, new Random(1), 0, 0.7);
 
             logger.AssertLogs(expectedLogs);
         }

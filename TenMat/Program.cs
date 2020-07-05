@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using TenMat.Data;
+using TenMat.Sql;
 
 namespace TenMat
 {
@@ -11,11 +14,19 @@ namespace TenMat
 
         public static void Main(string[] args)
         {
-            MatchScoreboard ms = new MatchScoreboard(_p2AtServe, _fifthSetTieBreakRule);
+            SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
+
+            sqlMap.LoadPlayers(new DateTime(1970, 1, 1));
+
+            var federer = Player.Instances.First(p => p.Name.ToLower().Contains("federer"));
+
+            sqlMap.LoadMatches(federer, DateTime.Now.AddYears(-5));
+
+            Scoreboard ms = new Scoreboard(_p2AtServe, _fifthSetTieBreakRule);
             SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);
         }
 
-        public static void SimulateMatch(MatchScoreboard ms, ILogger logger,
+        public static void SimulateMatch(Scoreboard ms, ILogger logger,
             Random rdm, int pause, double serverRatio)
         {
             if (ms == null)
