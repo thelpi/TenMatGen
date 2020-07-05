@@ -6,30 +6,12 @@ namespace TenMat.Data
 {
     public class Player
     {
-        private static readonly List<Player> _instances = new List<Player>();
-
-        public static bool AddPlayer(Player player)
-        {
-            if (player == null)
-            {
-                throw new ArgumentNullException(nameof(player));
-            }
-
-            if (!_instances.Any(p => p.Id == player.Id))
-            {
-                _instances.Add(player);
-                return true;
-            }
-            return false;
-        }
-
-        public static IReadOnlyCollection<Player> Instances { get { return _instances; } }
-
         private readonly List<MatchHistory> _matchHistoryList = new List<MatchHistory>();
 
         public uint Id { get; set; }
         public string Name { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        public bool MatchHistorySet { get; private set; }
         public IReadOnlyCollection<MatchHistory> MatchHistoryList
         {
             get
@@ -49,6 +31,7 @@ namespace TenMat.Data
             _matchHistoryList.AddRange(
                 matchHistoryList.Where(mh => mh?.WinnerId == Id || mh.LoserId == Id)
             );
+            MatchHistorySet = true;
         }
 
         public IEnumerable<MatchHistory> FilterMatchHistoryList(SurfaceEnum? surface = null,

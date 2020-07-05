@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using TenMat.Data;
+using TenMat.Sql;
 
 namespace TenMat
 {
@@ -9,20 +11,45 @@ namespace TenMat
         private const double _serveRation = 0.8;
         private const FifthSetTieBreakRuleEnum _fifthSetTieBreakRule = FifthSetTieBreakRuleEnum.At12_12;
         private const bool _p2AtServe = false;
-        private const BestOfEnum bestOf = BestOfEnum.Five;
+
+        private static List<Player> _players = new List<Player>();
 
         public static void Main(string[] args)
         {
-            /*SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
+            SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
 
-            sqlMap.LoadPlayers(new DateTime(1970, 1, 1));
+            sqlMap.LoadPlayers(new DateTime(1970, 1, 1), (p) => _players.Add(p));
 
-            var federer = Player.Instances.First(p => p.Name.ToLower().Contains("federer"));
+            DateTime loadDate = DateTime.Now.AddYears(-5);
+            DateTime matchDate = DateTime.Now.AddYears(-1);
 
-            sqlMap.LoadMatches(federer, DateTime.Now.AddYears(-5));*/
+            while (true)
+            {
+                Player p1 = _players[Tools.Rdm.Next(0, _players.Count)];
+                Player p2 = _players[Tools.Rdm.Next(0, _players.Count)];
+                while (p2.Id == p1.Id)
+                {
+                    p2 = _players[Tools.Rdm.Next(0, _players.Count)];
+                }
+                LevelEnum level = (LevelEnum)Tools.Rdm.Next(1, 8);
+                SurfaceEnum surface = (SurfaceEnum)Tools.Rdm.Next(1, 4);
+                RoundEnum round = (RoundEnum)Tools.Rdm.Next(1, 10);
+                BestOfEnum bestOf = Tools.Rdm.Next(0, 2) == 1 ? BestOfEnum.Five : BestOfEnum.Three;
 
-            Scoreboard ms = new Scoreboard(bestOf, _p2AtServe, _fifthSetTieBreakRule);
-            SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);
+                sqlMap.LoadMatches(p1, loadDate, true);
+                sqlMap.LoadMatches(p2, loadDate, true);
+
+                Match m = new Match(p1, p2, bestOf, FifthSetTieBreakRuleEnum.At12_12,
+                    surface, level, round, matchDate);
+
+                m.RunToEnd();
+
+                Console.WriteLine(m.ToString());
+                System.Threading.Thread.Sleep(200);
+            }
+
+            /*Scoreboard ms = new Scoreboard(bestOf, _p2AtServe, _fifthSetTieBreakRule);
+            SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);*/
         }
 
         public static void SimulateMatch(Scoreboard ms, ILogger logger,

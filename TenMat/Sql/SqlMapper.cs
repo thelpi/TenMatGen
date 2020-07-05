@@ -82,9 +82,16 @@ namespace TenMat.Sql
         /// Loads every players from the database into <see cref="Player.Instances"/>.
         /// </summary>
         /// <param name="youngerThan">Filters only players younger than the specified date.</param>
+        /// <param name="newPlayerAction">The action to execute to the loaded player.</param>
         /// <exception cref="InvalidOperationException">An exception occured</exception>
-        public void LoadPlayers(DateTime? youngerThan)
+        /// <exception cref="ArgumentNullException"><paramref name="newPlayerAction"/> is <c>Null</c>.</exception>
+        public void LoadPlayers(DateTime? youngerThan, Action<Player> newPlayerAction)
         {
+            if (newPlayerAction == null)
+            {
+                throw new ArgumentNullException(nameof(newPlayerAction));
+            }
+
             GenericLoad((command) =>
             {
                 command.CommandText = "SELECT id, first_name, last_name, birth_date FROM player";
@@ -96,7 +103,7 @@ namespace TenMat.Sql
             }, 
             (reader) =>
             {
-                Player.AddPlayer(new Player
+                newPlayerAction(new Player
                 {
                     DateOfBirth = reader.Get<DateTime?>("birth_date"),
                     Id = reader.Get<UInt32>("id"),
@@ -112,11 +119,16 @@ namespace TenMat.Sql
         /// <param name="player">Instance of <see cref="player"/>.</param>
         /// <param name="afterThat">Filters to matches player after this date (or the same day).</param>
         /// <exception cref="ArgumentNullException"><paramref name="player"/> is <c>Null</c>.</exception>
-        public void LoadMatches(Player player, DateTime? afterThat)
+        public void LoadMatches(Player player, DateTime? afterThat, bool dontReload)
         {
             if (player == null)
             {
                 throw new ArgumentNullException(nameof(player));
+            }
+
+            if (dontReload && player.MatchHistorySet)
+            {
+                return;
             }
 
             List<MatchHistory> matches = new List<MatchHistory>();

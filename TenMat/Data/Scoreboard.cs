@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using TenMat.Data;
 
-namespace TenMat
+namespace TenMat.Data
 {
     /// <summary>
     /// Represents the scoreboard of a tennis match.
