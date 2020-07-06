@@ -99,6 +99,7 @@ namespace TenMat.Data
 
         private static List<List<Player>> GetSeededPlayers(int drawSize, List<Player> drawPlayersList)
         {
+            // THIS TO REMOVE AND THE SYSTEM IS GENERIC
             Dictionary<int, int> newSeedsByDrawSize = new Dictionary<int, int>
             {
                 { 8, 2 },
@@ -145,13 +146,29 @@ namespace TenMat.Data
 
         private void FillDraw(List<List<Match>> matchesBySeed, List<Match> unseededMatches)
         {
+            var stackIndexByJumpSize = new Dictionary<int, int>();
+            for (int i = 1; i < matchesBySeed.Count; i++)
+            {
+                stackIndexByJumpSize.Add((int)Math.Pow(2, i), i);
+            }
+            stackIndexByJumpSize = stackIndexByJumpSize
+                .Reverse()
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
             var matchesCountWithSeed = matchesBySeed.Sum(ms => ms.Count);
             var matchesUnseededCountBetweenTwoSeededMatch = unseededMatches.Count / matchesCountWithSeed;
             for (int i = 0; i < matchesCountWithSeed; i++)
             {
-                // TODO
-                int stackIndex = i % 8 == 0 ? 0 : (i % 4 == 0 ? 1 : (i % 2 == 0 ? 2 : 3));
-                UnstackMatchIntoDraw(matchesBySeed[stackIndex]);
+                int stackIndex = 0;
+                foreach (int jumpSize in stackIndexByJumpSize.Keys)
+                {
+                    if (i % jumpSize == 0)
+                    {
+                        stackIndex = stackIndexByJumpSize[jumpSize];
+                        break;
+                    }
+                }
+                UnstackMatchIntoDraw(matchesBySeed[(matchesBySeed.Count - 1) - stackIndex]);
                 for (int j = 0; j < matchesUnseededCountBetweenTwoSeededMatch; j++)
                 {
                     _draw.Add(unseededMatches[(i * matchesUnseededCountBetweenTwoSeededMatch) + j]);
