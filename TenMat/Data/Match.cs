@@ -42,7 +42,7 @@ namespace TenMat.Data
             _level = level;
             _round = round;
             _date = date;
-            _p2IsFirstToServe = Tools.CoinDraw();
+            _p2IsFirstToServe = Tools.FlipCoin();
             _playerOne = p1;
             _playerTwo = p2;
             _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetRule);

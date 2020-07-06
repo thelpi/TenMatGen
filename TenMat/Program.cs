@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using TenMat.Data;
 using TenMat.Sql;
 
@@ -18,12 +19,14 @@ namespace TenMat
         {
             SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
 
-            sqlMap.LoadPlayers(new DateTime(1970, 1, 1), (p) => _players.Add(p));
+            // new DateTime(1970, 1, 1)
+            sqlMap.LoadPlayers(null, (p) => _players.Add(p), new DateTime(2019, 03, 04));
 
             DateTime loadDate = DateTime.Now.AddYears(-5);
             DateTime matchDate = DateTime.Now.AddYears(-1);
 
-            while (true)
+            Competition competition = new Competition(128, matchDate, LevelEnum.GrandSlam, FifthSetTieBreakRuleEnum.At12_12, SurfaceEnum.Hard, _players.Take(128));
+           /* while (true)
             {
                 Player p1 = _players[Tools.Rdm.Next(0, _players.Count)];
                 Player p2 = _players[Tools.Rdm.Next(0, _players.Count)];
@@ -46,7 +49,7 @@ namespace TenMat
 
                 Console.WriteLine(m.ToString());
                 System.Threading.Thread.Sleep(200);
-            }
+            }*/
 
             /*Scoreboard ms = new Scoreboard(bestOf, _p2AtServe, _fifthSetTieBreakRule);
             SimulateMatch(ms, new Logger(), new Random(), _msPause, _serveRation);*/

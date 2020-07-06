@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 using MySql.Data.MySqlClient;
 using TenMat.Data;
 
@@ -81,11 +82,12 @@ namespace TenMat.Sql
         /// <summary>
         /// Loads every players from the database into <see cref="Player.Instances"/>.
         /// </summary>
-        /// <param name="youngerThan">Filters only players younger than the specified date.</param>
         /// <param name="newPlayerAction">The action to execute to the loaded player.</param>
+        /// <param name="youngerThan">Filters only players younger than the specified date.</param>
+        /// <param name="sortByRankingAtDate">Applies a sort on the query based on the ranking at the specified date.</param>
         /// <exception cref="InvalidOperationException">An exception occured</exception>
         /// <exception cref="ArgumentNullException"><paramref name="newPlayerAction"/> is <c>Null</c>.</exception>
-        public void LoadPlayers(DateTime? youngerThan, Action<Player> newPlayerAction)
+        public void LoadPlayers(Action<Player> newPlayerAction, DateTime? youngerThan, DateTime? sortByRankingAtDate)
         {
             if (newPlayerAction == null)
             {
@@ -94,12 +96,26 @@ namespace TenMat.Sql
 
             GenericLoad((command) =>
             {
-                command.CommandText = "SELECT id, first_name, last_name, birth_date FROM player";
+                var sqlBuilder = new StringBuilder();
+                sqlBuilder.AppendLine("SELECT id, first_name, last_name, birth_date FROM player");
                 if (youngerThan.HasValue)
                 {
-                    command.CommandText += " WHERE birth_date >= @dob";
+                    sqlBuilder.AppendLine("WHERE birth_date >= @dob");
                     command.AddDateTimeParameter("@dob", youngerThan.Value);
                 }
+                if (sortByRankingAtDate.HasValue)
+                {
+                    sqlBuilder.AppendLine("ORDER BY IFNULL((");
+                    sqlBuilder.AppendLine(" SELECT r.ranking FROM ranking AS r");
+                    sqlBuilder.AppendLine(" WHERE r.player_id = player.id");
+                    sqlBuilder.AppendLine(" AND r.version_id = 2");
+                    sqlBuilder.AppendLine(" AND r.date >= @rank_date");
+                    sqlBuilder.AppendLine(" ORDER BY r.date ASC");
+                    sqlBuilder.AppendLine(" LIMIT 0,1");
+                    sqlBuilder.AppendLine("), 9999) ASC");
+                    command.AddDateTimeParameter("@rank_date", sortByRankingAtDate.Value);
+                }
+                command.CommandText = sqlBuilder.ToString();
             }, 
             (reader) =>
             {
