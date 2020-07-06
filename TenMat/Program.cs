@@ -20,7 +20,7 @@ namespace TenMat
             SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
 
             // new DateTime(1970, 1, 1)
-            sqlMap.LoadPlayers(null, (p) => _players.Add(p), new DateTime(2019, 03, 04));
+            sqlMap.LoadPlayers((p) => _players.Add(p), null, new DateTime(2019, 03, 04));
 
             DateTime loadDate = DateTime.Now.AddYears(-5);
             DateTime matchDate = DateTime.Now.AddYears(-1);

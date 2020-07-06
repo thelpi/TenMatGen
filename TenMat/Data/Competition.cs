@@ -45,6 +45,11 @@ namespace TenMat.Data
             Surface = surface;
             _draw = new List<Match>();
 
+            SetDrawMatches(drawSize, availablePlayersRanked);
+        }
+
+        private void SetDrawMatches(int drawSize, IEnumerable<Player> availablePlayersRanked)
+        {
             List<Player> listFixed = availablePlayersRanked.Take(DrawSize).ToList();
 
             var group1Seed = drawSize > 8 ? listFixed.Take(2).ToList() : new List<Player>();
@@ -53,77 +58,77 @@ namespace TenMat.Data
             var group4Seed = drawSize > 64 ? listFixed.Except(group1Seed).Except(group2Seed).Except(group3Seed).Take(8).ToList() : new List<Player>();
             var group0Seed = listFixed.Except(group1Seed).Except(group2Seed).Except(group3Seed).Except(group4Seed).ToList();
 
-            var matchSeed1 = DrawMatchesForList(group1Seed, group0Seed, false);
-            var matchSeed2 = DrawMatchesForList(group2Seed, group0Seed);
-            var matchSeed3 = DrawMatchesForList(group3Seed, group0Seed);
-            var matchSeed4 = DrawMatchesForList(group4Seed, group0Seed);
-
-            group0Seed = group0Seed.Where(p => p != null).OrderBy(p => Tools.Rdm.Next()).ToList();
-            var matchSeed0 = group0Seed
-                                .Take(group0Seed.Count / 2)
-                                .Select(p => new Match(p, group0Seed.Skip(group0Seed.Count / 2).ElementAt(group0Seed.IndexOf(p)), Level.GetBestOf(), FifthSetTieBreakRule, Surface, Level, DrawSize.GetRound(), Date))
-                                .ToList();
-
-            var seedPlaceholderCount = matchSeed1.Count + matchSeed2.Count + matchSeed3.Count + matchSeed4.Count;
-            var jumpsCount = matchSeed0.Count / seedPlaceholderCount;
-            for (int i = 0; i < seedPlaceholderCount; i++)
+            List<Match>[] matchesBySeed = new List<Match>[4]
             {
-                if (i % 8 == 0)
+                GenerateMatchesForSeededPlayers(group1Seed, group0Seed, false),
+                GenerateMatchesForSeededPlayers(group2Seed, group0Seed, true),
+                GenerateMatchesForSeededPlayers(group3Seed, group0Seed, true),
+                GenerateMatchesForSeededPlayers(group4Seed, group0Seed, true)
+            };
+
+            FillDraw(matchesBySeed, GenerateUnseededMatches(group0Seed).ToList());
+        }
+
+        private IEnumerable<Match> GenerateUnseededMatches(List<Player> unseededPlayers)
+        {
+            var randomizedPlayersList = unseededPlayers
+                .Where(p => p != null)
+                .OrderBy(p => Tools.Rdm.Next())
+                .ToList();
+
+            for (int i = 1; i < randomizedPlayersList.Count; i += 2)
+            {
+                yield return GenerateMatchFromContext(randomizedPlayersList[i - 1],
+                    randomizedPlayersList[i]);
+            }
+        }
+
+        private Match GenerateMatchFromContext(Player p, Player p2)
+        {
+            return new Match(p, p2, Level.GetBestOf(), FifthSetTieBreakRule, Surface, Level, DrawSize.GetRound(), Date);
+        }
+
+        private void FillDraw(List<Match>[] matchesBySeed, List<Match> unseededMatches)
+        {
+            var matchesCountWithSeed = matchesBySeed.Sum(ms => ms.Count);
+            var matchesUnseededCountBetweenTwoSeededMatch = unseededMatches.Count / matchesCountWithSeed;
+            for (int i = 0; i < matchesCountWithSeed; i++)
+            {
+                int stackIndex = i % 8 == 0 ? 0 : (i % 4 == 0 ? 1 : (i % 2 == 0 ? 2 : 3));
+                UnstackMatchIntoDraw(matchesBySeed[stackIndex]);
+                for (int j = 0; j < matchesUnseededCountBetweenTwoSeededMatch; j++)
                 {
-                    _draw.Add(matchSeed1[0]);
-                    matchSeed1.RemoveAt(0);
-                }
-                else if (i % 4 == 0)
-                {
-                    _draw.Add(matchSeed2[0]);
-                    matchSeed2.RemoveAt(0);
-                }
-                else if (i % 2 == 0)
-                {
-                    _draw.Add(matchSeed3[0]);
-                    matchSeed3.RemoveAt(0);
-                }
-                else
-                {
-                    _draw.Add(matchSeed4[0]);
-                    matchSeed4.RemoveAt(0);
-                }
-                for (int j = 0; j < jumpsCount; j++)
-                {
-                    _draw.Add(matchSeed0[(i * jumpsCount) + j]);
+                    _draw.Add(unseededMatches[(i * matchesUnseededCountBetweenTwoSeededMatch) + j]);
                 }
             }
         }
 
-        private List<Match> DrawMatchesForList(List<Player> seeds, List<Player> unseeds, bool randomize = true)
+        private void UnstackMatchIntoDraw(List<Match> seedMatches)
+        {
+            _draw.Add(seedMatches[0]);
+            seedMatches.RemoveAt(0);
+        }
+
+        private List<Match> GenerateMatchesForSeededPlayers(List<Player> seededPlayers, List<Player> unseededPlayers, bool randomizeList)
         {
             var matches = new List<Match>();
-            int seedsCount = seeds.Count;
+            int seedsCount = seededPlayers.Count;
             for (int i = 0; i < seedsCount; i++ )
             {
-                if (seeds[i] != null)
-                {
-                    matches.Add(new Match(seeds[i], GetRandomPlayer(unseeds, i), Level.GetBestOf(), FifthSetTieBreakRule, Surface, Level, DrawSize.GetRound(), Date));
-                    seeds[i] = null;
-                }
+                matches.Add(GenerateMatchFromContext(seededPlayers[i], UnstackRandomPlayer(unseededPlayers)));
             }
 
-            if (!randomize)
-            {
-                return matches;
-            }
-
-            return matches.OrderBy(m => Tools.Rdm.Next()).ToList();
+            return randomizeList ? matches.OrderBy(m => Tools.Rdm.Next()).ToList() : matches;
         }
 
-        private static Player GetRandomPlayer(List<Player> players, int? i = null)
+        private static Player UnstackRandomPlayer(List<Player> players)
         {
             int randomIndex;
             do
             {
                 randomIndex = Tools.Rdm.Next(0, players.Count);
             }
-            while (players[randomIndex] == null || randomIndex == i);
+            while (players[randomIndex] == null);
 
             Player player = players[randomIndex];
             players[randomIndex] = null;
