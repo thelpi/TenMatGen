@@ -4,18 +4,48 @@ using System.Linq;
 
 namespace TenMat.Data
 {
+    /// <summary>
+    /// Represents a competition.
+    /// </summary>
     public class Competition
     {
         private readonly List<Match> _draw;
 
+        /// <summary>
+        /// Surface.
+        /// </summary>
         public SurfaceEnum Surface { get; }
+        /// <summary>
+        /// Competition level.
+        /// </summary>
         public LevelEnum Level { get; }
+        /// <summary>
+        /// Date.
+        /// </summary>
         public DateTime Date { get; }
+        /// <summary>
+        /// Draw size.
+        /// </summary>
         public int DrawSize { get; }
+        /// <summary>
+        /// Rule for fifth set tie-break.
+        /// </summary>
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; }
 
-        public Competition(int drawSize, DateTime date, LevelEnum level,
-            FifthSetTieBreakRuleEnum fifthSetTieBreakRule,
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="drawSize"><see cref="DrawSize"/> value.</param>
+        /// <param name="date"><see cref="Date"/> value.</param>
+        /// <param name="level"><see cref="Level"/> value.</param>
+        /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
+        /// <param name="surface"><see cref="Surface"/> value.</param>
+        /// <param name="availablePlayersRanked">List of available players, sorted by seed.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="drawSize"/> be a power of two between 8 and 128.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="availablePlayersRanked"/> is <c>Null</c>.</exception>
+        /// <exception cref="ArgumentException">The players list size should be greater or equal than the draw size.</exception>
+        /// <exception cref="ArgumentException">The players list should not contain duplicates.</exception>
+        public Competition(int drawSize, DateTime date, LevelEnum level, FifthSetTieBreakRuleEnum fifthSetTieBreakRule,
             SurfaceEnum surface, IEnumerable<Player> availablePlayersRanked)
         {
             if (drawSize < 8 || drawSize > 128 || !drawSize.IsPowerOfTwo())
@@ -50,23 +80,48 @@ namespace TenMat.Data
 
         private void SetDrawMatches(int drawSize, IEnumerable<Player> availablePlayersRanked)
         {
-            List<Player> listFixed = availablePlayersRanked.Take(DrawSize).ToList();
+            List<Player> drawPlayersList = availablePlayersRanked.Take(DrawSize).ToList();
 
-            var group1Seed = drawSize > 8 ? listFixed.Take(2).ToList() : new List<Player>();
-            var group2Seed = drawSize > 16 ? listFixed.Except(group1Seed).Take(2).ToList() : new List<Player>();
-            var group3Seed = drawSize > 32 ? listFixed.Except(group1Seed).Except(group2Seed).Take(4).ToList() : new List<Player>();
-            var group4Seed = drawSize > 64 ? listFixed.Except(group1Seed).Except(group2Seed).Except(group3Seed).Take(8).ToList() : new List<Player>();
-            var group0Seed = listFixed.Except(group1Seed).Except(group2Seed).Except(group3Seed).Except(group4Seed).ToList();
+            List<List<Player>> seededPlayersBySeedValue = GetSeededPlayers(drawSize, drawPlayersList);
 
-            List<Match>[] matchesBySeed = new List<Match>[4]
+            List<Player> unseededPlayers = drawPlayersList
+                .Except(seededPlayersBySeedValue.SelectMany(sp => sp))
+                .ToList();
+
+            List<List<Match>> matchesBySeed = new List<List<Match>>();
+            for (int i = 0; i < seededPlayersBySeedValue.Count; i++)
             {
-                GenerateMatchesForSeededPlayers(group1Seed, group0Seed, false),
-                GenerateMatchesForSeededPlayers(group2Seed, group0Seed, true),
-                GenerateMatchesForSeededPlayers(group3Seed, group0Seed, true),
-                GenerateMatchesForSeededPlayers(group4Seed, group0Seed, true)
+                matchesBySeed.Add(GenerateMatchesForSeededPlayers(seededPlayersBySeedValue[i], unseededPlayers, i > 0));
+            }
+
+            FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
+        }
+
+        private static List<List<Player>> GetSeededPlayers(int drawSize, List<Player> drawPlayersList)
+        {
+            Dictionary<int, int> newSeedsByDrawSize = new Dictionary<int, int>
+            {
+                { 8, 2 },
+                { 16, 2 },
+                { 32, 4 },
+                { 64, 8 }
             };
 
-            FillDraw(matchesBySeed, GenerateUnseededMatches(group0Seed).ToList());
+            List<List<Player>> seededPlayersBySeedValue = new List<List<Player>>();
+            foreach (int minDrawSize in newSeedsByDrawSize.Keys)
+            {
+                var seededPlayers = new List<Player>();
+                if (drawSize >= minDrawSize)
+                {
+                    seededPlayers = drawPlayersList
+                        .Except(seededPlayersBySeedValue.SelectMany(sp => sp))
+                        .Take(newSeedsByDrawSize[minDrawSize])
+                        .ToList();
+                }
+                seededPlayersBySeedValue.Add(seededPlayers);
+            }
+
+            return seededPlayersBySeedValue;
         }
 
         private IEnumerable<Match> GenerateUnseededMatches(List<Player> unseededPlayers)
@@ -88,12 +143,13 @@ namespace TenMat.Data
             return new Match(p, p2, Level.GetBestOf(), FifthSetTieBreakRule, Surface, Level, DrawSize.GetRound(), Date);
         }
 
-        private void FillDraw(List<Match>[] matchesBySeed, List<Match> unseededMatches)
+        private void FillDraw(List<List<Match>> matchesBySeed, List<Match> unseededMatches)
         {
             var matchesCountWithSeed = matchesBySeed.Sum(ms => ms.Count);
             var matchesUnseededCountBetweenTwoSeededMatch = unseededMatches.Count / matchesCountWithSeed;
             for (int i = 0; i < matchesCountWithSeed; i++)
             {
+                // TODO
                 int stackIndex = i % 8 == 0 ? 0 : (i % 4 == 0 ? 1 : (i % 2 == 0 ? 2 : 3));
                 UnstackMatchIntoDraw(matchesBySeed[stackIndex]);
                 for (int j = 0; j < matchesUnseededCountBetweenTwoSeededMatch; j++)
