@@ -51,6 +51,7 @@
     <Compile Include="Data\Game.cs" />
     <Compile Include="Data\Match.cs" />
     <Compile Include="Data\Set.cs" />
+    <Compile Include="DrawGenerator.cs" />
     <Compile Include="Sql\IDbCommandExtensions.cs" />
     <Compile Include="Data\LevelEnum.cs" />
     <Compile Include="Sql\SqlMapper.cs" />
