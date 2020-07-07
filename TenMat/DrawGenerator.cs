@@ -48,8 +48,10 @@ namespace TenMat
         /// <summary>
         /// Generates a draw.
         /// </summary>
-        /// <returns>The draw.</returns>
-        public List<Tuple<int, int>> GenerateDraw()
+        /// <typeparam name="TMatch">Match target type.</typeparam>
+        /// <param name="toMatch">Delegate to transform a double-index tuple into an instance of <typeparamref name="TMatch"/>.</param>
+        /// <returns>A list of <see cref="TMatch"/>.</returns>
+        public List<TMatch> GenerateDraw<TMatch>(Func<Tuple<int, int>, TMatch> toMatch)
         {
             List<int> indexList = Enumerable.Range(0, DrawSize).ToList();
 
@@ -68,7 +70,7 @@ namespace TenMat
 
             IEnumerable<Tuple<int, int>> matches = FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
 
-            return matches.ToList();
+            return matches.Select(toMatch).ToList();
         }
 
         private static List<List<int>> GetSeededPlayers(int drawSize, double seedRate, List<int> indexList)

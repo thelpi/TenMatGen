@@ -72,21 +72,17 @@ namespace TenMat.Data
             Date = date;
             Level = level;
             Surface = surface;
-            _draw = drawGen.GenerateDraw()
-                .Select(drawTuple => ToMatch(drawGen.DrawSize, availablePlayersRanked.ToList(), drawTuple))
+            _draw = drawGen
+                .GenerateDraw(drawTuple =>
+                    new Match(availablePlayersRanked.ElementAt(drawTuple.Item1),
+                        availablePlayersRanked.ElementAt(drawTuple.Item2),
+                        Level.GetBestOf(),
+                        FifthSetTieBreakRule,
+                        Surface,
+                        Level,
+                        drawGen.DrawSize.GetRound(),
+                        Date))
                 .ToList();
-        }
-
-        private Match ToMatch(int drawSize, List<Player> availablePlayersRanked, Tuple<int, int> drawTuple)
-        {
-            return new Match(availablePlayersRanked[drawTuple.Item1],
-                availablePlayersRanked[drawTuple.Item2],
-                Level.GetBestOf(),
-                FifthSetTieBreakRule,
-                Surface,
-                Level,
-                drawSize.GetRound(),
-                Date);
         }
     }
 }
