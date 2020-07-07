@@ -9,28 +9,23 @@ namespace TenMat
     /// </summary>
     public class DrawGenerator
     {
-        private readonly List<Tuple<uint, uint>> _draw;
-        private readonly List<uint> _playerIdList;
-        private readonly int _drawSize;
-        private readonly double _seedRate;
-
         /// <summary>
-        /// Draw; empty before the call of <see cref="GenerateDraw"/>.
+        /// Seed rate.
         /// </summary>
-        public IReadOnlyCollection<Tuple<uint, uint>> Draw { get { return _draw; } }
+        public double SeedRate { get; }
+        /// <summary>
+        /// Draw size.
+        /// </summary>
+        public int DrawSize { get; }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="rankedPlayerIdList">Available players, sorted by ranking.</param>
         /// <param name="drawSize">Draw size.</param>
         /// <param name="seedRate">Seed rate.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="drawSize"/> should be a power of two between 8 and 128.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="seedRate"/> should be between 0 and 1/2, and the multiplicative inverse of a power of two.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="rankedPlayerIdList"/> is <c>Null</c>.</exception>
-        /// <exception cref="ArgumentException"><paramref name="rankedPlayerIdList"/> size should be greater or equal than the draw size.</exception>
-        /// <exception cref="ArgumentException"><paramref name="rankedPlayerIdList"/> should not contain duplicates.</exception>
-        public DrawGenerator(IEnumerable<uint> rankedPlayerIdList, int drawSize, double seedRate)
+        public DrawGenerator(int drawSize, double seedRate)
         {
             if (drawSize < 8 || drawSize > 128 || !drawSize.IsPowerOfTwo())
             {
@@ -45,67 +40,55 @@ namespace TenMat
                     throw new ArgumentOutOfRangeException(nameof(seedRate), seedRate, "The seed rate should be between 0 and 1/2, and the multiplicative inverse of a power of two.");
                 }
             }
-
-            if (rankedPlayerIdList == null)
-            {
-                throw new ArgumentNullException(nameof(rankedPlayerIdList));
-            }
-
-            if (rankedPlayerIdList.Count() < drawSize)
-            {
-                throw new ArgumentException("The players list size should be greater or equal than the draw size.", nameof(rankedPlayerIdList));
-            }
-
-            if (rankedPlayerIdList.Count() != rankedPlayerIdList.Distinct().Count())
-            {
-                throw new ArgumentException("The players list should not contain duplicates.", nameof(rankedPlayerIdList));
-            }
-
-            _draw = new List<Tuple<uint, uint>>();
-            _playerIdList = rankedPlayerIdList.Take(drawSize).ToList();
-            _drawSize = drawSize;
-            _seedRate = seedRate;
+            
+            DrawSize = drawSize;
+            SeedRate = seedRate;
         }
 
         /// <summary>
         /// Generates a draw.
         /// </summary>
-        public void GenerateDraw()
+        /// <returns>The draw.</returns>
+        public List<Tuple<int, int>> GenerateDraw()
         {
-            List<List<uint>> seededPlayersBySeedValue = GetSeededPlayers();
+            List<int> indexList = Enumerable.Range(0, DrawSize).ToList();
 
-            List<uint?> unseededPlayers = _playerIdList
+            List<List<int>> seededPlayersBySeedValue = GetSeededPlayers(DrawSize, SeedRate, indexList);
+
+            List<int?> unseededPlayers = indexList
                 .Except(seededPlayersBySeedValue.SelectMany(sp => sp))
-                .Select(p => (uint?)p)
+                .Select(p => (int?)p)
                 .ToList();
 
-            var matchesBySeed = new List<List<Tuple<uint, uint>>>();
+            var matchesBySeed = new List<List<Tuple<int, int>>>();
             for (int i = 0; i < seededPlayersBySeedValue.Count; i++)
             {
                 matchesBySeed.Add(GenerateMatchesForSeededPlayers(seededPlayersBySeedValue[i], unseededPlayers, i > 0));
             }
 
-            FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
+            IEnumerable<Tuple<int, int>> matches = FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
+
+            return matches.ToList();
         }
 
-        private List<List<uint>> GetSeededPlayers()
+        private static List<List<int>> GetSeededPlayers(int drawSize, double seedRate, List<int> indexList)
         {
             Dictionary<int, int> newSeedsByDrawSize = new Dictionary<int, int>();
-            int tmpDrawSize = _drawSize;
-            while (tmpDrawSize >= 2 && _seedRate * tmpDrawSize > 1)
+            int tmpDrawSize = drawSize;
+            while (tmpDrawSize >= 2 && seedRate * tmpDrawSize > 1)
             {
-                var seededCount = (int)(_seedRate * tmpDrawSize);
+                var seededCount = (int)(seedRate * tmpDrawSize);
                 newSeedsByDrawSize.Add(tmpDrawSize, seededCount == 2 ? 2 : seededCount / 2);
                 tmpDrawSize /= 2;
             }
 
-            var seededPlayersBySeedValue = new List<List<uint>>();
+            var seededPlayersBySeedValue = new List<List<int>>();
             foreach (int minDrawSize in newSeedsByDrawSize.Keys.Reverse())
             {
-                var seededPlayers = new List<uint>();
-                if (_drawSize >= minDrawSize)
+                var seededPlayers = new List<int>();
+                if (drawSize >= minDrawSize)
                 {
-                    seededPlayers = _playerIdList
+                    seededPlayers = indexList
                         .Except(seededPlayersBySeedValue.SelectMany(sp => sp))
                         .Take(newSeedsByDrawSize[minDrawSize])
                         .ToList();
@@ -116,7 +99,7 @@ namespace TenMat
             return seededPlayersBySeedValue;
         }
 
-        private static IEnumerable<Tuple<uint, uint>> GenerateUnseededMatches(List<uint?> unseededPlayers)
+        private static IEnumerable<Tuple<int, int>> GenerateUnseededMatches(List<int?> unseededPlayers)
         {
             var randomizedPlayersList = unseededPlayers
                 .Where(p => p.HasValue)
@@ -126,13 +109,13 @@ namespace TenMat
 
             for (int i = 1; i < randomizedPlayersList.Count; i += 2)
             {
-                yield return new Tuple<uint, uint>(
+                yield return new Tuple<int, int>(
                     randomizedPlayersList[i - 1],
                     randomizedPlayersList[i]);
             }
         }
 
-        private void FillDraw(List<List<Tuple<uint, uint>>> matchesBySeed, List<Tuple<uint, uint>> unseededMatches)
+        private static IEnumerable<Tuple<int, int>> FillDraw(List<List<Tuple<int, int>>> matchesBySeed, List<Tuple<int, int>> unseededMatches)
         {
             var stackIndexByJumpSize = new Dictionary<int, int>();
             for (int i = 1; i < matchesBySeed.Count; i++)
@@ -156,27 +139,24 @@ namespace TenMat
                         break;
                     }
                 }
-                UnstackMatchIntoDraw(matchesBySeed[(matchesBySeed.Count - 1) - stackIndex]);
+
+                yield return matchesBySeed[(matchesBySeed.Count - 1) - stackIndex][0];
+                matchesBySeed[(matchesBySeed.Count - 1) - stackIndex].RemoveAt(0);
+
                 for (int j = 0; j < matchesUnseededCountBetweenTwoSeededMatch; j++)
                 {
-                    _draw.Add(unseededMatches[(i * matchesUnseededCountBetweenTwoSeededMatch) + j]);
+                    yield return unseededMatches[(i * matchesUnseededCountBetweenTwoSeededMatch) + j];
                 }
             }
         }
 
-        private void UnstackMatchIntoDraw(List<Tuple<uint, uint>> seedMatches)
+        private static List<Tuple<int, int>> GenerateMatchesForSeededPlayers(List<int> seededPlayers, List<int?> unseededPlayers, bool randomizeList)
         {
-            _draw.Add(seedMatches[0]);
-            seedMatches.RemoveAt(0);
-        }
-
-        private static List<Tuple<uint, uint>> GenerateMatchesForSeededPlayers(List<uint> seededPlayers, List<uint?> unseededPlayers, bool randomizeList)
-        {
-            var matches = new List<Tuple<uint, uint>>();
+            var matches = new List<Tuple<int, int>>();
             int seedsCount = seededPlayers.Count;
             for (int i = 0; i < seedsCount; i++)
             {
-                matches.Add(new Tuple<uint, uint>(
+                matches.Add(new Tuple<int, int>(
                     seededPlayers[i],
                     UnstackRandomPlayer(unseededPlayers)));
             }
@@ -184,7 +164,7 @@ namespace TenMat
             return randomizeList ? matches.OrderBy(m => Tools.Rdm.Next()).ToList() : matches;
         }
 
-        private static uint UnstackRandomPlayer(List<uint?> players)
+        private static int UnstackRandomPlayer(List<int?> players)
         {
             int randomIndex;
             do
@@ -193,7 +173,7 @@ namespace TenMat
             }
             while (!players[randomIndex].HasValue);
 
-            uint player = players[randomIndex].Value;
+            int player = players[randomIndex].Value;
             players[randomIndex] = null;
             return player;
         }

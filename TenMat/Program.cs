@@ -25,7 +25,7 @@ namespace TenMat
             DateTime loadDate = DateTime.Now.AddYears(-5);
             DateTime matchDate = DateTime.Now.AddYears(-1);
 
-            Competition competition = new Competition(128, matchDate, LevelEnum.GrandSlam, FifthSetTieBreakRuleEnum.At12_12, SurfaceEnum.Hard, _players, 0.25);
+            Competition competition = new Competition(new DrawGenerator(128, 0.25), matchDate, LevelEnum.GrandSlam, FifthSetTieBreakRuleEnum.At12_12, SurfaceEnum.Hard, _players);
            /* while (true)
             {
                 Player p1 = _players[Tools.Rdm.Next(0, _players.Count)];

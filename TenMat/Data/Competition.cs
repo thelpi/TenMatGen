@@ -24,10 +24,6 @@ namespace TenMat.Data
         /// </summary>
         public DateTime Date { get; }
         /// <summary>
-        /// Draw size.
-        /// </summary>
-        public int DrawSize { get; }
-        /// <summary>
         /// Rule for fifth set tie-break.
         /// </summary>
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; }
@@ -35,41 +31,62 @@ namespace TenMat.Data
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="drawSize"><see cref="DrawSize"/> value.</param>
+        /// <param name="drawGen">Instance of <see cref="DrawGenerator"/>.</param>
         /// <param name="date"><see cref="Date"/> value.</param>
         /// <param name="level"><see cref="Level"/> value.</param>
         /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
         /// <param name="surface"><see cref="Surface"/> value.</param>
         /// <param name="availablePlayersRanked">List of available players, sorted by seed.</param>
-        /// <param name="seedRate">Rate of seeded players compared to <see cref="drawSize"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="drawGen"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="availablePlayersRanked"/> is <c>Null</c>.</exception>
-        public Competition(int drawSize, DateTime date, LevelEnum level, FifthSetTieBreakRuleEnum fifthSetTieBreakRule,
-            SurfaceEnum surface, IEnumerable<Player> availablePlayersRanked, double seedRate)
+        /// <exception cref="ArgumentException"><paramref name="availablePlayersRanked"/> should not contain duplicates.</exception>
+        /// <exception cref="ArgumentException">The list of players should contains at least two elements.</exception>
+        public Competition(DrawGenerator drawGen,
+            DateTime date,
+            LevelEnum level,
+            FifthSetTieBreakRuleEnum fifthSetTieBreakRule,
+            SurfaceEnum surface,
+            IEnumerable<Player> availablePlayersRanked)
         {
+            if (drawGen == null)
+            {
+                throw new ArgumentNullException(nameof(drawGen));
+            }
+
             if (availablePlayersRanked == null)
             {
                 throw new ArgumentNullException(nameof(availablePlayersRanked));
             }
 
+            if (availablePlayersRanked.GroupBy(p => p.Id).Any(p => p.Count() > 1))
+            {
+                throw new ArgumentException("The list of players should not contain duplicates.", nameof(availablePlayersRanked));
+            }
+
+            if (availablePlayersRanked.Count() < 2)
+            {
+                throw new ArgumentException("The list of players should contains at least two elements.", nameof(availablePlayersRanked));
+            }
+
             FifthSetTieBreakRule = fifthSetTieBreakRule;
-            DrawSize = drawSize;
             Date = date;
             Level = level;
             Surface = surface;
-            DrawGenerator dg = new DrawGenerator(availablePlayersRanked.Select(p => p.Id), drawSize, seedRate);
-            dg.GenerateDraw();
-            _draw = dg.Draw
-                .Select(d =>
-                    new Match(availablePlayersRanked.Single(p => p.Id == d.Item1),
-                        availablePlayersRanked.Single(p => p.Id == d.Item2),
-                        Level.GetBestOf(),
-                        FifthSetTieBreakRule,
-                        Surface,
-                        Level,
-                        DrawSize.GetRound(),
-                        Date)
-                    )
+            _draw = drawGen.GenerateDraw()
+                .Select(drawTuple => ToMatch(drawGen.DrawSize, availablePlayersRanked.ToList(), drawTuple))
                 .ToList();
+        }
+
+        private Match ToMatch(int drawSize, List<Player> availablePlayersRanked, Tuple<int, int> drawTuple)
+        {
+            return new Match(availablePlayersRanked[drawTuple.Item1],
+                availablePlayersRanked[drawTuple.Item2],
+                Level.GetBestOf(),
+                FifthSetTieBreakRule,
+                Surface,
+                Level,
+                drawSize.GetRound(),
+                Date);
         }
     }
 }
