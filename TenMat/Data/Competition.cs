@@ -41,16 +41,27 @@ namespace TenMat.Data
         /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
         /// <param name="surface"><see cref="Surface"/> value.</param>
         /// <param name="availablePlayersRanked">List of available players, sorted by seed.</param>
+        /// <param name="seedPercent">Rate of seeded players compared to <see cref="drawSize"/>.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="drawSize"/> be a power of two between 8 and 128.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="availablePlayersRanked"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentException">The players list size should be greater or equal than the draw size.</exception>
         /// <exception cref="ArgumentException">The players list should not contain duplicates.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="seedRate"/> should be between 0 and 1/2, and the multiplicative inverse of a power of two.</exception>
         public Competition(int drawSize, DateTime date, LevelEnum level, FifthSetTieBreakRuleEnum fifthSetTieBreakRule,
-            SurfaceEnum surface, IEnumerable<Player> availablePlayersRanked)
+            SurfaceEnum surface, IEnumerable<Player> availablePlayersRanked, double seedRate)
         {
             if (drawSize < 8 || drawSize > 128 || !drawSize.IsPowerOfTwo())
             {
                 throw new ArgumentOutOfRangeException(nameof(drawSize), drawSize, "The draw should be a power of two between 8 and 128.");
+            }
+
+            if (seedRate != 0)
+            {
+                int seedRatePw = (int)Math.Floor(1 / seedRate);
+                if (seedRatePw != 1 / seedRate || !seedRatePw.IsPowerOfTwo() || seedRate > 0.5 || seedRatePw >= drawSize)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(seedRate), seedRate, "The seed rate should be between 0 and 1/2, and the multiplicative inverse of a power of two.");
+                }
             }
 
             if (availablePlayersRanked == null)
@@ -75,14 +86,14 @@ namespace TenMat.Data
             Surface = surface;
             _draw = new List<Match>();
 
-            SetDrawMatches(drawSize, availablePlayersRanked);
+            SetDrawMatches(drawSize, availablePlayersRanked, seedRate);
         }
 
-        private void SetDrawMatches(int drawSize, IEnumerable<Player> availablePlayersRanked)
+        private void SetDrawMatches(int drawSize, IEnumerable<Player> availablePlayersRanked, double seedRate)
         {
             List<Player> drawPlayersList = availablePlayersRanked.Take(DrawSize).ToList();
 
-            List<List<Player>> seededPlayersBySeedValue = GetSeededPlayers(drawSize, drawPlayersList);
+            List<List<Player>> seededPlayersBySeedValue = GetSeededPlayers(drawSize, drawPlayersList, seedRate);
 
             List<Player> unseededPlayers = drawPlayersList
                 .Except(seededPlayersBySeedValue.SelectMany(sp => sp))
@@ -97,19 +108,19 @@ namespace TenMat.Data
             FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
         }
 
-        private static List<List<Player>> GetSeededPlayers(int drawSize, List<Player> drawPlayersList)
+        private static List<List<Player>> GetSeededPlayers(int drawSize, List<Player> drawPlayersList, double seedRate)
         {
-            // THIS TO REMOVE AND THE SYSTEM IS GENERIC
-            Dictionary<int, int> newSeedsByDrawSize = new Dictionary<int, int>
+            Dictionary<int, int> newSeedsByDrawSize = new Dictionary<int, int>();
+            int tmpDrawSize = drawSize;
+            while (tmpDrawSize >= 2 && seedRate * tmpDrawSize > 1)
             {
-                { 8, 2 },
-                { 16, 2 },
-                { 32, 4 },
-                { 64, 8 }
-            };
+                var seededCount = (int)(seedRate * tmpDrawSize);
+                newSeedsByDrawSize.Add(tmpDrawSize, seededCount == 2 ? 2 : seededCount / 2);
+                tmpDrawSize /= 2;
+            }
 
             List<List<Player>> seededPlayersBySeedValue = new List<List<Player>>();
-            foreach (int minDrawSize in newSeedsByDrawSize.Keys)
+            foreach (int minDrawSize in newSeedsByDrawSize.Keys.Reverse())
             {
                 var seededPlayers = new List<Player>();
                 if (drawSize >= minDrawSize)

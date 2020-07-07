@@ -4,14 +4,32 @@ using System.Linq;
 
 namespace TenMat.Data
 {
+    /// <summary>
+    /// Represents a player.
+    /// </summary>
     public class Player
     {
         private readonly List<MatchHistory> _matchHistoryList = new List<MatchHistory>();
 
+        /// <summary>
+        /// Unique identifier.
+        /// </summary>
         public uint Id { get; set; }
+        /// <summary>
+        /// Full name.
+        /// </summary>
         public string Name { get; set; }
+        /// <summary>
+        /// Date of birth.
+        /// </summary>
         public DateTime? DateOfBirth { get; set; }
+        /// <summary>
+        /// Indicates if <see cref="MatchHistoryList"/> is set to its final value.
+        /// </summary>
         public bool MatchHistorySet { get; private set; }
+        /// <summary>
+        /// Collection of <see cref="MatchHistory"/>.
+        /// </summary>
         public IReadOnlyCollection<MatchHistory> MatchHistoryList
         {
             get
@@ -20,6 +38,10 @@ namespace TenMat.Data
             }
         }
 
+        /// <summary>
+        /// Sets <see cref="MatchHistoryList"/> from a collection of matches.
+        /// </summary>
+        /// <param name="matchHistoryList">Collection of <see cref="MatchHistory"/>.</param>
         public void SetMatchHistoryList(IEnumerable<MatchHistory> matchHistoryList)
         {
             if (matchHistoryList == null)
@@ -34,13 +56,20 @@ namespace TenMat.Data
             MatchHistorySet = true;
         }
 
+        /// <summary>
+        /// Filters matches from <see cref="MatchHistoryList"/> by criteria.
+        /// </summary>
+        /// <param name="surface">Optionnal; court surface.</param>
+        /// <param name="level">Optionnal; level of competition.</param>
+        /// <param name="round">Optionnal; round of competition.</param>
+        /// <param name="opponentId">Optionnal; opponent identifier.</param>
+        /// <param name="bestOf">Optionnal; best of three or five sets.</param>
+        /// <param name="dateMin">Optionnal; minimal date of the match.</param>
+        /// <param name="dateMax">Optionnal; maximal date of the match.</param>
+        /// <returns></returns>
         public IEnumerable<MatchHistory> FilterMatchHistoryList(SurfaceEnum? surface = null,
-            LevelEnum? level = null,
-            RoundEnum? round = null,
-            uint? opponentId = null,
-            uint? bestOf = null,
-            DateTime? dateMin = null,
-            DateTime? dateMax = null)
+            LevelEnum? level = null, RoundEnum? round = null, uint? opponentId = null,
+            uint? bestOf = null, DateTime? dateMin = null, DateTime? dateMax = null)
         {
             var matches = MatchHistoryList.AsEnumerable();
             if (surface.HasValue)
@@ -74,16 +103,12 @@ namespace TenMat.Data
             return matches;
         }
 
-        public double GetWinRatio(IEnumerable<MatchHistory> matchHistoryList)
-        {
-            if (matchHistoryList == null)
-            {
-                throw new ArgumentNullException(nameof(matchHistoryList));
-            }
-
-            return matchHistoryList.Count(mg => mg.WinnerId == Id) / (double)matchHistoryList.Count();
-        }
-
+        /// <summary>
+        /// Tool to get the fullname of a player for firstname and lastname.
+        /// </summary>
+        /// <param name="firstName">First name.</param>
+        /// <param name="lastName">Last name.</param>
+        /// <returns>Full name.</returns>
         public static string GetFullName(string firstName, string lastName)
         {
             string fullName = string.Empty;
@@ -106,6 +131,12 @@ namespace TenMat.Data
             }
 
             return fullName;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }
