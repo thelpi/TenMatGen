@@ -68,9 +68,26 @@ namespace TenMat
                 matchesBySeed.Add(GenerateMatchesForSeededPlayers(seededPlayersBySeedValue[i], unseededPlayers, i > 0));
             }
 
-            IEnumerable<Tuple<int, int>> matches = FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
+            IEnumerable<Tuple<int, int>> matchesIndex = FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
 
-            return matches.Select(toMatch).ToList();
+            List<Tuple<int, int>> matchesIndexFixed = matchesIndex.ToList();
+            var matches = new List<TMatch>();
+            
+            int halfCount = 1;
+            for (int i = 0; i < matchesIndexFixed.Count; i++)
+            {
+                if (i >= matchesIndexFixed.Count / 2)
+                {
+                    matches.Add(toMatch(matchesIndexFixed.ElementAt(matchesIndexFixed.Count - halfCount)));
+                    halfCount++;
+                }
+                else
+                {
+                    matches.Add(toMatch(matchesIndexFixed.ElementAt(i)));
+                }
+            }
+
+            return matches;
         }
 
         private static List<List<int>> GetSeededPlayers(int drawSize, double seedRate, List<int> indexList)
