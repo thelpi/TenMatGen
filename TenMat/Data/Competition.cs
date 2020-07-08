@@ -9,7 +9,7 @@ namespace TenMat.Data
     /// </summary>
     public class Competition
     {
-        private readonly List<Match> _draw;
+        private readonly Dictionary<RoundEnum, IReadOnlyList<Match>> _draw;
 
         /// <summary>
         /// Surface.
@@ -27,6 +27,30 @@ namespace TenMat.Data
         /// Rule for fifth set tie-break.
         /// </summary>
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; }
+
+        /// <summary>
+        /// Draw by round.
+        /// </summary>
+        public IReadOnlyDictionary<RoundEnum, IReadOnlyList<Match>> Draw
+        {
+            get
+            {
+                return _draw;
+            }
+        }
+
+        /// <summary>
+        /// Indicates if the instance is readonly (finished).
+        /// </summary>
+        public bool Readonly
+        {
+            get
+            {
+                var round = _draw.Keys.Last();
+
+                return round == RoundEnum.F && _draw[round][0].Winner != null;
+            }
+        }
 
         /// <summary>
         /// Constructor.
@@ -72,7 +96,11 @@ namespace TenMat.Data
             Date = date;
             Level = level;
             Surface = surface;
-            _draw = drawGen
+            _draw = new Dictionary<RoundEnum, IReadOnlyList<Match>>();
+
+            var round = drawGen.DrawSize.GetRound();
+
+            var drawRound = drawGen
                 .GenerateDraw(drawTuple =>
                     // TODO : at this point, drawTuple.Item1 can be NULL and will throw an exception
                     new Match(availablePlayersRanked.ElementAtOrDefault(drawTuple.Item1),
@@ -81,9 +109,49 @@ namespace TenMat.Data
                         FifthSetTieBreakRule,
                         Surface,
                         Level,
-                        drawGen.DrawSize.GetRound(),
+                        round,
                         Date))
                 .ToList();
+
+            _draw.Add(round, drawRound);
+        }
+
+        /// <summary>
+        /// Proceeds to next round
+        /// </summary>
+        public void NextRound()
+        {
+            if (Readonly)
+            {
+                return;
+            }
+
+            var round = _draw.Keys.Last();
+
+            foreach (Match match in _draw[round])
+            {
+                match.RunToEnd();
+            }
+
+            if (!Readonly)
+            {
+                var nextRound = (RoundEnum)(((int)round) - 1);
+                var nextRoundMatches = new List<Match>();
+                for (int i = 0; i < _draw[round].Count; i = i + 2)
+                {
+                    nextRoundMatches.Add(new Match(
+                        _draw[round][i].Winner,
+                        _draw[round][i + 1].Winner,
+                        Level.GetBestOf(),
+                        FifthSetTieBreakRule,
+                        Surface,
+                        Level,
+                        nextRound,
+                        Date));
+                }
+
+                _draw.Add(nextRound, nextRoundMatches);
+            }
         }
     }
 }

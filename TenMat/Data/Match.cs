@@ -26,6 +26,27 @@ namespace TenMat.Data
         private readonly DateTime _date;
 
         /// <summary>
+        /// Gets the winner of the match (if finished).
+        /// </summary>
+        public Player Winner
+        {
+            get
+            {
+                if (_playerTwo == null)
+                {
+                    return _playerOne;
+                }
+
+                if (!_scoreboard.Readonly || _scoreboard.IndexLead == -1)
+                {
+                    return null;
+                }
+
+                return _scoreboard.IndexLead == 0 ? _playerOne : _playerTwo;
+            }
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="p1">First player.</param>
@@ -63,6 +84,44 @@ namespace TenMat.Data
                 _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetRule);
                 ComputeServeRate(out _p1ServeRatio, out _p2ServeRatio);
             }
+        }
+
+        /// <summary>
+        /// Runs match points to the end.
+        /// </summary>
+        public void RunToEnd()
+        {
+            if (_playerTwo == null)
+            {
+                return;
+            }
+
+            while (!_scoreboard.Readonly)
+            {
+                if (Tools.Rdm.NextDouble() >= GetCurrentPlayerServeRatio())
+                {
+                    _scoreboard.AddReceiverPoint();
+                }
+                else
+                {
+                    _scoreboard.AddServerPoint();
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            string p2Name = _playerTwo?.Name ?? EXEMPT_PLAYER_NAME;
+
+            var sb = new StringBuilder();
+            sb.AppendLine(string.Concat(_playerOne.Name, " - ", _playerTwo.Name));
+            sb.AppendLine(string.Concat(_surface, " - ", _level, " - ", _round));
+            if (_playerTwo != null)
+            {
+                sb.AppendLine(_scoreboard.ToString());
+            }
+            return sb.ToString();
         }
 
         private void ComputeServeRate(out double player1Rate, out double player2Rate)
@@ -144,47 +203,9 @@ namespace TenMat.Data
                 matches.Count(m => m.WinnerId == playerId) / (double)matches.Count();
         }
 
-        /// <summary>
-        /// Runs match points to the end.
-        /// </summary>
-        public void RunToEnd()
-        {
-            if (_playerTwo == null)
-            {
-                return;
-            }
-
-            while (!_scoreboard.Readonly)
-            {
-                if (Tools.Rdm.NextDouble() >= GetCurrentPlayerServeRatio())
-                {
-                    _scoreboard.AddReceiverPoint();
-                }
-                else
-                {
-                    _scoreboard.AddServerPoint();
-                }
-            }
-        }
-
         private double GetCurrentPlayerServeRatio()
         {
             return _scoreboard.CurrentServerIndex == 0 ? _p1ServeRatio : _p2ServeRatio;
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            string p2Name = _playerTwo?.Name ?? EXEMPT_PLAYER_NAME;
-
-            var sb = new StringBuilder();
-            sb.AppendLine(string.Concat(_playerOne.Name, " - ", _playerTwo.Name));
-            sb.AppendLine(string.Concat(_surface, " - ", _level, " - ", _round));
-            if (_playerTwo != null)
-            {
-                sb.AppendLine(_scoreboard.ToString());
-            }
-            return sb.ToString();
         }
     }
 }

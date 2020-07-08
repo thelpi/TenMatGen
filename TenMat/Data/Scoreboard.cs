@@ -30,6 +30,58 @@ namespace TenMat.Data
         public bool Readonly { get { return _sets.Last().Readonly; } }
 
         /// <summary>
+        /// Gets the index (0 or 1) of the winner (if finished) or the current leader otherwise; <c>-1</c> if there's no leader at this point.
+        /// </summary>
+        public int IndexLead
+        {
+            get
+            {
+                int setsCount0 = _sets.Count(s => s.IsWonBy(0));
+                int setsCount1 = _sets.Count(s => s.IsWonBy(1));
+
+                if (setsCount0 > setsCount1)
+                {
+                    return 0;
+                }
+                else if (setsCount1 > setsCount0)
+                {
+                    return 1;
+                }
+
+                if (_sets.Last().Games1 > _sets.Last().Games2)
+                {
+                    return 0;
+                }
+                else if (_sets.Last().Games1 < _sets.Last().Games2)
+                {
+                    return 1;
+                }
+
+                if (_sets.Last().CurrentGame != null)
+                {
+                    if (_sets.Last().CurrentGame.Points1 > _sets.Last().CurrentGame.Points2)
+                    {
+                        return 0;
+                    }
+                    else if (_sets.Last().CurrentGame.Points2 > _sets.Last().CurrentGame.Points1)
+                    {
+                        return 1;
+                    }
+                    else if (_sets.Last().CurrentGame.AdvantagePlayerIndex == 0)
+                    {
+                        return 0;
+                    }
+                    else if (_sets.Last().CurrentGame.AdvantagePlayerIndex == 1)
+                    {
+                        return 1;
+                    }
+                }
+
+                return -1;
+            }
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="bestOf"><see cref="BestOf"/> value.</param>
