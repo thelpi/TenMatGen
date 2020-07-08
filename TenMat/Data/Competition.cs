@@ -62,7 +62,7 @@ namespace TenMat.Data
             {
                 throw new ArgumentException("The list of players should not contain duplicates.", nameof(availablePlayersRanked));
             }
-
+            
             if (availablePlayersRanked.Count() < 2)
             {
                 throw new ArgumentException("The list of players should contains at least two elements.", nameof(availablePlayersRanked));
@@ -74,8 +74,9 @@ namespace TenMat.Data
             Surface = surface;
             _draw = drawGen
                 .GenerateDraw(drawTuple =>
-                    new Match(availablePlayersRanked.ElementAt(drawTuple.Item1),
-                        availablePlayersRanked.ElementAt(drawTuple.Item2),
+                    // TODO : at this point, drawTuple.Item1 can be NULL and will throw an exception
+                    new Match(availablePlayersRanked.ElementAtOrDefault(drawTuple.Item1),
+                        availablePlayersRanked.ElementAtOrDefault(drawTuple.Item2),
                         Level.GetBestOf(),
                         FifthSetTieBreakRule,
                         Surface,

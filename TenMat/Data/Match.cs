@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace TenMat.Data
 {
+    /// <summary>
+    /// Represents a match.
+    /// </summary>
     public class Match
     {
+        private const string EXEMPT_PLAYER_NAME = "Exempt";
         private const double DEF_SERVE_RATE = 0.7;
         private const int MATCH_HISTORY_YEARS = 5;
 
@@ -20,6 +25,19 @@ namespace TenMat.Data
         private readonly RoundEnum _round;
         private readonly DateTime _date;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="p1">First player.</param>
+        /// <param name="p2">Second player.</param>
+        /// <param name="bestOf">Best-of three or five sets.</param>
+        /// <param name="fifthSetRule">Tie-break rule for fifth set.</param>
+        /// <param name="surface">Surface.</param>
+        /// <param name="level">Competition level.</param>
+        /// <param name="round">Round.</param>
+        /// <param name="date">Match date.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="p1"/> is <c>Null</c>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="p2"/> identifier is the same as <paramref name="p1"/>.</exception>
         public Match(Player p1, Player p2, BestOfEnum bestOf, FifthSetTieBreakRuleEnum fifthSetRule,
             SurfaceEnum surface, LevelEnum level, RoundEnum round, DateTime date)
         {
@@ -28,12 +46,7 @@ namespace TenMat.Data
                 throw new ArgumentNullException(nameof(p1));
             }
 
-            if (p2 == null)
-            {
-                throw new ArgumentNullException(nameof(p1));
-            }
-
-            if (p2.Id == p1.Id)
+            if (p2?.Id == p1.Id)
             {
                 throw new ArgumentException("Players should not be the same.", nameof(p2));
             }
@@ -45,26 +58,31 @@ namespace TenMat.Data
             _p2IsFirstToServe = Tools.FlipCoin();
             _playerOne = p1;
             _playerTwo = p2;
-            _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetRule);
+            if (p2 != null)
+            {
+                _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetRule);
+                ComputeServeRate(out _p1ServeRatio, out _p2ServeRatio);
+            }
+        }
 
-            var p1Rate = ComputeRatio(_playerOne, _playerTwo);
-            var p2Rate = ComputeRatio(_playerTwo, _playerOne);
-            var delta = p1Rate / (p1Rate + p2Rate);
+        private void ComputeServeRate(out double player1Rate, out double player2Rate)
+        {
+            player1Rate = DEF_SERVE_RATE;
+            player2Rate = DEF_SERVE_RATE;
+
+            double p1Rate = ComputeRatio(_playerOne, _playerTwo);
+            double p2Rate = ComputeRatio(_playerTwo, _playerOne);
+            double delta = p1Rate / (p1Rate + p2Rate);
 
             if (delta > 0.5)
             {
-                _p1ServeRatio = DEF_SERVE_RATE + (delta * 0.2);
-                _p2ServeRatio = DEF_SERVE_RATE - ((1 - delta) * 0.2);
+                player1Rate += (delta * 0.2);
+                player2Rate -= ((1 - delta) * 0.2);
             }
             else if (delta < 0.5)
             {
-                _p1ServeRatio = DEF_SERVE_RATE - (delta * 0.2);
-                _p2ServeRatio = DEF_SERVE_RATE + ((1 - delta) * 0.2);
-            }
-            else
-            {
-                _p1ServeRatio = DEF_SERVE_RATE;
-                _p2ServeRatio = DEF_SERVE_RATE;
+                player1Rate -= (delta * 0.2);
+                player2Rate += ((1 - delta) * 0.2);
             }
         }
 
@@ -126,8 +144,16 @@ namespace TenMat.Data
                 matches.Count(m => m.WinnerId == playerId) / (double)matches.Count();
         }
 
+        /// <summary>
+        /// Runs match points to the end.
+        /// </summary>
         public void RunToEnd()
         {
+            if (_playerTwo == null)
+            {
+                return;
+            }
+
             while (!_scoreboard.Readonly)
             {
                 if (Tools.Rdm.NextDouble() >= GetCurrentPlayerServeRatio())
@@ -143,23 +169,22 @@ namespace TenMat.Data
 
         private double GetCurrentPlayerServeRatio()
         {
-            if (_scoreboard.CurrentServerIndex == 0)
-            {
-                return _p1ServeRatio;
-            }
-            else
-            {
-                return _p2ServeRatio;
-            }
+            return _scoreboard.CurrentServerIndex == 0 ? _p1ServeRatio : _p2ServeRatio;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
-            string line1 = string.Concat(_playerOne.Name, " - ", _playerTwo.Name);
-            string line2 = string.Concat(_surface, " - ", _level, " - ", _round);
-            string line3 = _scoreboard.ToString();
+            string p2Name = _playerTwo?.Name ?? EXEMPT_PLAYER_NAME;
 
-            return string.Concat(line1, "\r\n", line2, "\r\n", line3);
+            var sb = new StringBuilder();
+            sb.AppendLine(string.Concat(_playerOne.Name, " - ", _playerTwo.Name));
+            sb.AppendLine(string.Concat(_surface, " - ", _level, " - ", _round));
+            if (_playerTwo != null)
+            {
+                sb.AppendLine(_scoreboard.ToString());
+            }
+            return sb.ToString();
         }
     }
 }
