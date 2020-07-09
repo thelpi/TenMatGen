@@ -28,6 +28,7 @@ namespace TenMatGui
             InitializeComponent();
 
             CbbBestOf.ItemsSource = Enum.GetValues(typeof(BestOfEnum));
+            CbbFinalBestOf.ItemsSource = Enum.GetValues(typeof(BestOfEnum));
             CbbDrawSize.ItemsSource = new List<int> { 2, 4, 8, 16, 32, 64, 128 };
             CbbFifthSetRule.ItemsSource = Enum.GetValues(typeof(FifthSetTieBreakRuleEnum));
             CbbLevel.ItemsSource = Enum.GetValues(typeof(LevelEnum));
@@ -36,6 +37,7 @@ namespace TenMatGui
 
             TxtDate.Text = _lastRanking.ToString("yyyy-MM-dd");
             CbbBestOf.SelectedIndex = 1;
+            CbbFinalBestOf.SelectedIndex = 1;
             CbbDrawSize.SelectedIndex = 6;
             CbbFifthSetRule.SelectedIndex = 2;
             CbbLevel.SelectedIndex = 0;
@@ -49,6 +51,7 @@ namespace TenMatGui
                 || startDate > _lastRanking
                 || startDate < _firstRanking
                 || CbbBestOf.SelectedIndex < 0
+                || CbbFinalBestOf.SelectedIndex < 0
                 || CbbDrawSize.SelectedIndex < 0
                 || CbbFifthSetRule.SelectedIndex < 0
                 || CbbLevel.SelectedIndex < 0
@@ -78,7 +81,9 @@ namespace TenMatGui
                 (LevelEnum)CbbLevel.SelectedItem,
                 (FifthSetTieBreakRuleEnum)CbbFifthSetRule.SelectedItem,
                 (SurfaceEnum)CbbSurface.SelectedItem,
-                _players.Take(drawSize));
+                _players.Take(drawSize),
+                (BestOfEnum)CbbBestOf.SelectedItem,
+                (BestOfEnum)CbbFinalBestOf.SelectedItem);
 
             while (!cpt.Readonly)
             {
@@ -98,7 +103,6 @@ namespace TenMatGui
             };
             sp.SetValue(Grid.ColumnProperty, GrdMain.ColumnDefinitions.Count - 1);
             sp.SetValue(Grid.RowProperty, 0);
-
 
             Label lbl = new Label { Content = round.ToString() };
             sp.Children.Add(lbl);

@@ -59,12 +59,17 @@ namespace TenMat.Data
         /// <param name="date">Match date.</param>
         /// <exception cref="ArgumentNullException"><paramref name="p1"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="p2"/> identifier is the same as <paramref name="p1"/>.</exception>
-        public Match(Player p1, Player p2, BestOfEnum bestOf, FifthSetTieBreakRuleEnum fifthSetRule,
-            SurfaceEnum surface, LevelEnum level, RoundEnum round, DateTime date)
+        /// <exception cref="ArgumentNullException"><paramref name="competition"/> is <c>Null</c>.</exception>
+        public Match(Player p1, Player p2, Competition competition, RoundEnum round)
         {
             if (p1 == null)
             {
                 throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (competition == null)
+            {
+                throw new ArgumentNullException(nameof(competition));
             }
 
             if (p2?.Id == p1.Id)
@@ -72,16 +77,19 @@ namespace TenMat.Data
                 throw new ArgumentException("Players should not be the same.", nameof(p2));
             }
 
-            _surface = surface;
-            _level = level;
+            _surface = competition.Surface;
+            _level = competition.Level;
             _round = round;
-            _date = date;
+            _date = competition.Date;
             _p2IsFirstToServe = Tools.FlipCoin();
             _playerOne = p1;
             _playerTwo = p2;
             if (p2 != null)
             {
-                _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetRule);
+                _scoreboard = new Scoreboard(
+                    _round == RoundEnum.F ? competition.FinalBestOf : competition.BestOf,
+                    _p2IsFirstToServe,
+                    competition.FifthSetTieBreakRule);
                 ComputeServeRate(out _p1ServeRatio, out _p2ServeRatio);
             }
         }

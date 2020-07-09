@@ -27,6 +27,14 @@ namespace TenMat.Data
         /// Rule for fifth set tie-break.
         /// </summary>
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; }
+        /// <summary>
+        /// Sets best-of for matches except final.
+        /// </summary>
+        public BestOfEnum BestOf { get; }
+        /// <summary>
+        /// Sets best-of for final match.
+        /// </summary>
+        public BestOfEnum FinalBestOf { get; }
 
         /// <summary>
         /// Draw by round.
@@ -70,7 +78,9 @@ namespace TenMat.Data
             LevelEnum level,
             FifthSetTieBreakRuleEnum fifthSetTieBreakRule,
             SurfaceEnum surface,
-            IEnumerable<Player> availablePlayersRanked)
+            IEnumerable<Player> availablePlayersRanked,
+            BestOfEnum bestOf,
+            BestOfEnum finalBestOf)
         {
             if (drawGen == null)
             {
@@ -92,25 +102,22 @@ namespace TenMat.Data
                 throw new ArgumentException("The list of players should contains at least two elements.", nameof(availablePlayersRanked));
             }
 
+            BestOf = bestOf;
+            FinalBestOf = finalBestOf;
             FifthSetTieBreakRule = fifthSetTieBreakRule;
             Date = date;
             Level = level;
             Surface = surface;
             _draw = new Dictionary<RoundEnum, IReadOnlyList<Match>>();
 
-            var round = drawGen.DrawSize.GetRound();
+            var round = Tools.GetFirstRound(drawGen.DrawSize);
 
-            var drawRound = drawGen
+            List<Match> drawRound = drawGen
                 .GenerateDraw(drawTuple =>
                     // TODO : at this point, drawTuple.Item1 can be NULL and will throw an exception
-                    new Match(availablePlayersRanked.ElementAtOrDefault(drawTuple.Item1),
+                    NewMatch(availablePlayersRanked.ElementAtOrDefault(drawTuple.Item1),
                         availablePlayersRanked.ElementAtOrDefault(drawTuple.Item2),
-                        Level.GetBestOf(),
-                        FifthSetTieBreakRule,
-                        Surface,
-                        Level,
-                        round,
-                        Date))
+                        round))
                 .ToList();
 
             _draw.Add(round, drawRound);
@@ -139,19 +146,18 @@ namespace TenMat.Data
                 var nextRoundMatches = new List<Match>();
                 for (int i = 0; i < _draw[round].Count; i = i + 2)
                 {
-                    nextRoundMatches.Add(new Match(
-                        _draw[round][i].Winner,
+                    nextRoundMatches.Add(NewMatch(_draw[round][i].Winner,
                         _draw[round][i + 1].Winner,
-                        Level.GetBestOf(),
-                        FifthSetTieBreakRule,
-                        Surface,
-                        Level,
-                        nextRound,
-                        Date));
+                        nextRound));
                 }
 
                 _draw.Add(nextRound, nextRoundMatches);
             }
+        }
+
+        private Match NewMatch(Player p1, Player p2, RoundEnum round)
+        {
+            return new Match(p1, p2, this, round);
         }
     }
 }

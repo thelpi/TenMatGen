@@ -10,12 +10,6 @@ namespace TenMat
     /// </summary>
     public static class Tools
     {
-        private static readonly List<LevelEnum> _bestOfFiveLevels = new List<LevelEnum>
-        {
-            LevelEnum.GrandSlam,
-            LevelEnum.DavisCup
-        };
-
         private static readonly Dictionary<int, RoundEnum> _roundByDrawSize = new Dictionary<int, RoundEnum>
         {
             { 65, RoundEnum.R128 },
@@ -52,12 +46,12 @@ namespace TenMat
         }
 
         /// <summary>
-        /// Gets the <see cref="RoundEnum"/> value related to a draw size.
+        /// Gets the first <see cref="RoundEnum"/> value related to a draw size.
         /// </summary>
         /// <param name="drawSize">The draw size.</param>
         /// <returns><see cref="RoundEnum"/></returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="drawSize"/> should be between 2 and 128.</exception>
-        public static RoundEnum GetRound(this int drawSize)
+        public static RoundEnum GetFirstRound(int drawSize)
         {
             if (drawSize > 128 || drawSize < 2)
             {
@@ -68,16 +62,6 @@ namespace TenMat
                 .OrderByDescending(kvp => kvp.Key)
                 .First(kvp => kvp.Key <= drawSize)
                 .Value;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="BestOfEnum"/> related to competition level.
-        /// </summary>
-        /// <param name="level">The competition level.</param>
-        /// <returns>The <see cref="BestOfEnum"/> value.</returns>
-        public static BestOfEnum GetBestOf(this LevelEnum level)
-        {
-            return _bestOfFiveLevels.Contains(level) ? BestOfEnum.Five : BestOfEnum.Three;
         }
     }
 }

@@ -20,6 +20,10 @@
                 <ComboBox Name="CbbBestOf" Margin="5, 0, 0, 0" Width="100" />
             </StackPanel>
             <StackPanel Margin="0, 5, 0, 0" Orientation="Horizontal">
+                <Label Content="Final best-of :" Width="100" HorizontalContentAlignment="Right" Background="Gainsboro" />
+                <ComboBox Name="CbbFinalBestOf" Margin="5, 0, 0, 0" Width="100" />
+            </StackPanel>
+            <StackPanel Margin="0, 5, 0, 0" Orientation="Horizontal">
                 <Label Content="Level :" Width="100" HorizontalContentAlignment="Right" Background="Gainsboro" />
                 <ComboBox Name="CbbLevel" Margin="5, 0, 0, 0" Width="100" />
             </StackPanel>
