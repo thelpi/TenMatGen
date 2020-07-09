@@ -81,9 +81,9 @@ namespace TenMat.Sql
         }
 
         /// <summary>
-        /// Loads every players from the database into <see cref="Player.Instances"/>.
+        /// Loads players from the database by criteria.
         /// </summary>
-        /// <param name="newPlayerAction">The action to execute to the loaded player.</param>
+        /// <param name="newPlayerAction">The action to execute with the loaded player.</param>
         /// <param name="youngerThan">Filters only players younger than the specified date.</param>
         /// <param name="sortByRankingAtDate">Applies a sort on the query based on the ranking at the specified date.</param>
         /// <exception cref="InvalidOperationException">An exception occured</exception>
@@ -133,8 +133,9 @@ namespace TenMat.Sql
         /// Loads every matches of the specified player.
         /// Walkover matches are excluded.
         /// </summary>
-        /// <param name="player">Instance of <see cref="player"/>.</param>
+        /// <param name="player">Instance of <see cref="Player"/>.</param>
         /// <param name="afterThat">Filters to matches player after this date (or the same day).</param>
+        /// <param name="dontReload">Doesn't load matches from database if <see cref="Player.MatchHistorySet"/> is <c>True</c>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="player"/> is <c>Null</c>.</exception>
         public void LoadMatches(Player player, DateTime? afterThat, bool dontReload)
         {
@@ -148,31 +149,31 @@ namespace TenMat.Sql
                 return;
             }
 
-            List<MatchHistory> matches = new List<MatchHistory>();
+            List<MatchArchive> matches = new List<MatchArchive>();
             GenericLoad((command) =>
             {
-                command.CommandText = "SELECT best_of, winner_id, loser_id, round_id, " +
-                "edition.date_begin, edition.level_id, edition.surface_id " +
-                "FROM match_general INNER JOIN edition ON edition_id = edition.id " +
-                "WHERE (winner_id = @pid OR loser_id = @pid) AND walkover = 0 ";
+                var sbSql = new StringBuilder();
+                sbSql.AppendLine("SELECT best_of, winner_id, loser_id, round_id,");
+                sbSql.AppendLine("edition.date_begin, edition.level_id, edition.surface_id");
+                sbSql.AppendLine("FROM match_general");
+                sbSql.AppendLine("INNER JOIN edition ON edition_id = edition.id");
+                sbSql.AppendLine("WHERE (winner_id = @pid OR loser_id = @pid) AND walkover = 0 ");
                 if (afterThat.HasValue)
                 {
-                    command.CommandText += "AND edition.date_begin >= @date";
+                    sbSql.AppendLine("AND edition.date_begin >= @date");
                     command.AddDateTimeParameter("@date", afterThat.Value);
                 }
+                command.CommandText = sbSql.ToString();
                 command.AddParameter("@pid", player.Id, DbType.UInt32);
             }, (reader) =>
             {
-                matches.Add(new MatchHistory
-                {
-                    BestOf = reader.Get<uint>("best_of"),
-                    Date = reader.Get<DateTime>("date_begin"),
-                    Level = reader.Get<LevelEnum>("level_id"),
-                    LoserId = reader.Get<uint>("loser_id"),
-                    Round = reader.Get<RoundEnum>("round_id"),
-                    Surface = reader.Get<SurfaceEnum>("surface_id"),
-                    WinnerId = reader.Get<uint>("winner_id"),
-                });
+                matches.Add(new MatchArchive(reader.Get<SurfaceEnum>("surface_id"),
+                    reader.Get<LevelEnum>("level_id"),
+                    reader.Get<RoundEnum>("round_id"),
+                    (BestOfEnum)reader.Get<uint>("best_of"),
+                    reader.Get<DateTime>("date_begin"),
+                    reader.Get<uint>("winner_id"),
+                    reader.Get<uint>("loser_id")));
             });
             player.SetMatchHistoryList(matches);
         }

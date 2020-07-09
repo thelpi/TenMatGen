@@ -10,7 +10,7 @@ namespace TenMat.Data
     /// </summary>
     public class Player
     {
-        private readonly List<MatchHistory> _matchHistoryList = new List<MatchHistory>();
+        private readonly List<MatchArchive> _matchHistoryList = new List<MatchArchive>();
 
         /// <summary>
         /// Unique identifier.
@@ -29,9 +29,9 @@ namespace TenMat.Data
         /// </summary>
         public bool MatchHistorySet { get; private set; }
         /// <summary>
-        /// Collection of <see cref="MatchHistory"/>.
+        /// Collection of <see cref="MatchArchive"/>.
         /// </summary>
-        public IReadOnlyCollection<MatchHistory> MatchHistoryList
+        public IReadOnlyCollection<MatchArchive> MatchHistoryList
         {
             get
             {
@@ -42,8 +42,8 @@ namespace TenMat.Data
         /// <summary>
         /// Sets <see cref="MatchHistoryList"/> from a collection of matches.
         /// </summary>
-        /// <param name="matchHistoryList">Collection of <see cref="MatchHistory"/>.</param>
-        public void SetMatchHistoryList(IEnumerable<MatchHistory> matchHistoryList)
+        /// <param name="matchHistoryList">Collection of <see cref="MatchArchive"/>.</param>
+        public void SetMatchHistoryList(IEnumerable<MatchArchive> matchHistoryList)
         {
             if (matchHistoryList == null)
             {
@@ -68,9 +68,9 @@ namespace TenMat.Data
         /// <param name="dateMin">Optionnal; minimal date of the match.</param>
         /// <param name="dateMax">Optionnal; maximal date of the match.</param>
         /// <returns></returns>
-        public IEnumerable<MatchHistory> FilterMatchHistoryList(SurfaceEnum? surface = null,
+        public IEnumerable<MatchArchive> FilterMatchHistoryList(SurfaceEnum? surface = null,
             LevelEnum? level = null, RoundEnum? round = null, uint? opponentId = null,
-            uint? bestOf = null, DateTime? dateMin = null, DateTime? dateMax = null)
+            BestOfEnum? bestOf = null, DateTime? dateMin = null, DateTime? dateMax = null)
         {
             var matches = MatchHistoryList.AsEnumerable();
             if (surface.HasValue)
@@ -95,11 +95,11 @@ namespace TenMat.Data
             }
             if (dateMin.HasValue)
             {
-                matches = matches.Where(mg => mg.Date.Date >= dateMin.Value.Date);
+                matches = matches.Where(mg => mg.TournamentBeginningDate.Date >= dateMin.Value.Date);
             }
             if (dateMax.HasValue)
             {
-                matches = matches.Where(mg => mg.Date.Date <= dateMax.Value.Date);
+                matches = matches.Where(mg => mg.TournamentBeginningDate.Date <= dateMax.Value.Date);
             }
             return matches;
         }

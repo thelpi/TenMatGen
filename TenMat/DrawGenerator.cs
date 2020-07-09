@@ -50,7 +50,7 @@ namespace TenMat
         /// </summary>
         /// <typeparam name="TMatch">Match target type.</typeparam>
         /// <param name="toMatch">Delegate to transform a double-index tuple into an instance of <typeparamref name="TMatch"/>.</param>
-        /// <returns>A list of <see cref="TMatch"/>.</returns>
+        /// <returns>A list of <typeparamref name="TMatch"/>.</returns>
         public List<TMatch> GenerateDraw<TMatch>(Func<Tuple<int, int>, TMatch> toMatch)
         {
             List<int> indexList = Enumerable.Range(0, DrawSize).ToList();

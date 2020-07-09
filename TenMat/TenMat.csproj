@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\TenMat.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -53,13 +54,14 @@
     <Compile Include="Data\Enums\FifthSetTieBreakRuleEnum.cs" />
     <Compile Include="Data\Game.cs" />
     <Compile Include="Data\Match.cs" />
+    <Compile Include="Data\MatchBase.cs" />
     <Compile Include="Data\Set.cs" />
     <Compile Include="DrawGenerator.cs" />
     <Compile Include="Sql\IDbCommandExtensions.cs" />
     <Compile Include="Data\Enums\LevelEnum.cs" />
     <Compile Include="Sql\SqlMapper.cs" />
     <Compile Include="Data\Enums\RoundEnum.cs" />
-    <Compile Include="Data\MatchHistory.cs" />
+    <Compile Include="Data\MatchArchive.cs" />
     <Compile Include="Data\Player.cs" />
     <Compile Include="Data\Scoreboard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

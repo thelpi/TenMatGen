@@ -65,11 +65,13 @@ namespace TenMat.Data
         /// Constructor.
         /// </summary>
         /// <param name="drawGen">Instance of <see cref="DrawGenerator"/>.</param>
-        /// <param name="date"><see cref="Date"/> value.</param>
-        /// <param name="level"><see cref="Level"/> value.</param>
-        /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
-        /// <param name="surface"><see cref="Surface"/> value.</param>
-        /// <param name="availablePlayersRanked">List of available players, sorted by seed.</param>
+        /// <param name="date">The <see cref="Date"/> value.</param>
+        /// <param name="level">The <see cref="Level"/> value.</param>
+        /// <param name="fifthSetTieBreakRule">The <see cref="FifthSetTieBreakRule"/> value.</param>
+        /// <param name="surface">The <see cref="Surface"/> value.</param>
+        /// <param name="availablePlayersRanked">List of available players, sorted by ranking.</param>
+        /// <param name="bestOf">The <see cref="BestOf"/> value.</param>
+        /// <param name="finalBestOf">The <see cref="FinalBestOf"/> value.</param>
         /// <exception cref="ArgumentNullException"><paramref name="drawGen"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="availablePlayersRanked"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="availablePlayersRanked"/> should not contain duplicates.</exception>
@@ -158,7 +160,7 @@ namespace TenMat.Data
 
         private Match NewMatch(Player p1, Player p2, RoundEnum round)
         {
-            return new Match(p1, p2, this, round);
+            return Match.CreateNew(p1, p2, this, round);
         }
     }
 }

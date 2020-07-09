@@ -9,7 +9,8 @@ namespace TenMat.Data
     /// <summary>
     /// Represents a match.
     /// </summary>
-    public class Match
+    /// <seealso cref="MatchBase"/>
+    public class Match : MatchBase
     {
         private const string EXEMPT_PLAYER_NAME = "Exempt";
         private const double DEF_SERVE_RATE = 0.7;
@@ -21,10 +22,6 @@ namespace TenMat.Data
         private readonly double _p1ServeRatio;
         private readonly double _p2ServeRatio;
         private readonly bool _p2IsFirstToServe;
-        private readonly SurfaceEnum _surface;
-        private readonly LevelEnum _level;
-        private readonly RoundEnum _round;
-        private readonly DateTime _date;
 
         /// <summary>
         /// Gets the winner of the match (if finished).
@@ -48,29 +45,26 @@ namespace TenMat.Data
         }
 
         /// <summary>
-        /// Constructor.
+        /// Creates a new instance of <see cref="Match"/>.
         /// </summary>
-        /// <param name="p1">First player.</param>
-        /// <param name="p2">Second player.</param>
-        /// <param name="bestOf">Best-of three or five sets.</param>
-        /// <param name="fifthSetRule">Tie-break rule for fifth set.</param>
-        /// <param name="surface">Surface.</param>
-        /// <param name="level">Competition level.</param>
-        /// <param name="round">Round.</param>
-        /// <param name="date">Match date.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="p1"/> is <c>Null</c>.</exception>
-        /// <exception cref="ArgumentException"><paramref name="p2"/> identifier is the same as <paramref name="p1"/>.</exception>
+        /// <param name="p1">First <see cref="Player"/>.</param>
+        /// <param name="p2">Second <see cref="Player"/>.</param>
+        /// <param name="competition">Instance of <see cref="Competition"/>.</param>
+        /// <param name="round">Current <see cref="RoundEnum"/>.</param>
+        /// <returns>Instance of <see cref="Match"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="competition"/> is <c>Null</c>.</exception>
-        public Match(Player p1, Player p2, Competition competition, RoundEnum round)
+        /// <exception cref="ArgumentNullException"><paramref name="p1"/> is <c>Null</c>.</exception>
+        /// <exception cref="ArgumentException">Players should not be the same.</exception>
+        public static Match CreateNew(Player p1, Player p2, Competition competition, RoundEnum round)
         {
-            if (p1 == null)
-            {
-                throw new ArgumentNullException(nameof(p1));
-            }
-
             if (competition == null)
             {
                 throw new ArgumentNullException(nameof(competition));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
             }
 
             if (p2?.Id == p1.Id)
@@ -78,19 +72,22 @@ namespace TenMat.Data
                 throw new ArgumentException("Players should not be the same.", nameof(p2));
             }
 
-            _surface = competition.Surface;
-            _level = competition.Level;
-            _round = round;
-            _date = competition.Date;
+            return new Match(p1, p2, competition.Surface, competition.Level, round,
+                round == RoundEnum.F ? competition.FinalBestOf : competition.BestOf,
+                competition.Date, competition.FifthSetTieBreakRule);
+        }
+        
+        private Match(Player p1, Player p2, SurfaceEnum surface, LevelEnum level,
+            RoundEnum round, BestOfEnum bestOf, DateTime tournamentBeginningDate,
+            FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+            : base(surface, level, round, bestOf, tournamentBeginningDate)
+        {
             _p2IsFirstToServe = Tools.FlipCoin();
             _playerOne = p1;
             _playerTwo = p2;
             if (p2 != null)
             {
-                _scoreboard = new Scoreboard(
-                    _round == RoundEnum.F ? competition.FinalBestOf : competition.BestOf,
-                    _p2IsFirstToServe,
-                    competition.FifthSetTieBreakRule);
+                _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetTieBreakRule);
                 ComputeServeRate(out _p1ServeRatio, out _p2ServeRatio);
             }
         }
@@ -125,7 +122,7 @@ namespace TenMat.Data
 
             var sb = new StringBuilder();
             sb.AppendLine(string.Concat(_playerOne.Name, " - ", _playerTwo.Name));
-            sb.AppendLine(string.Concat(_surface, " - ", _level, " - ", _round));
+            sb.AppendLine(string.Concat(Surface, " - ", Level, " - ", Round));
             if (_playerTwo != null)
             {
                 sb.AppendLine(_scoreboard.ToString());
@@ -159,16 +156,16 @@ namespace TenMat.Data
             var matchesByYear = new Dictionary<int, double?[]>();
             for (int i = 0; i < MATCH_HISTORY_YEARS; i++)
             {
-                var matchesCoeff6 = p.FilterMatchHistoryList(_surface, _level, _round, opp.Id, (uint)_scoreboard.BestOf, _date.AddYears(-(i + 1)), _date.AddYears(-i));
-                var matchesCoeff5 = p.FilterMatchHistoryList(_surface, null, _round, opp.Id, (uint)_scoreboard.BestOf, _date.AddYears(-(i + 1)), _date.AddYears(-i))
+                var matchesCoeff6 = p.FilterMatchHistoryList(Surface, Level, Round, opp.Id, _scoreboard.BestOf, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i));
+                var matchesCoeff5 = p.FilterMatchHistoryList(Surface, null, Round, opp.Id, _scoreboard.BestOf, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
                     .Except(matchesCoeff6);
-                var matchesCoeff4 = p.FilterMatchHistoryList(_surface, null, null, opp.Id, (uint)_scoreboard.BestOf, _date.AddYears(-(i + 1)), _date.AddYears(-i))
+                var matchesCoeff4 = p.FilterMatchHistoryList(Surface, null, null, opp.Id, _scoreboard.BestOf, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
                     .Except(matchesCoeff6).Except(matchesCoeff5);
-                var matchesCoeff3 = p.FilterMatchHistoryList(_surface, null, null, opp.Id, null, _date.AddYears(-(i + 1)), _date.AddYears(-i))
+                var matchesCoeff3 = p.FilterMatchHistoryList(Surface, null, null, opp.Id, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
                     .Except(matchesCoeff6).Except(matchesCoeff5).Except(matchesCoeff4);
-                var matchesCoeff2 = p.FilterMatchHistoryList(null, null, null, opp.Id, null, _date.AddYears(-(i + 1)), _date.AddYears(-i))
+                var matchesCoeff2 = p.FilterMatchHistoryList(null, null, null, opp.Id, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
                     .Except(matchesCoeff6).Except(matchesCoeff5).Except(matchesCoeff4).Except(matchesCoeff3);
-                var matchesCoeff1 = p.FilterMatchHistoryList(null, null, null, null, null, _date.AddYears(-(i + 1)), _date.AddYears(-i))
+                var matchesCoeff1 = p.FilterMatchHistoryList(null, null, null, null, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
                     .Except(matchesCoeff6).Except(matchesCoeff5).Except(matchesCoeff4).Except(matchesCoeff3).Except(matchesCoeff2);
                 matchesByYear.Add(i, new double?[]
                 {
@@ -205,7 +202,7 @@ namespace TenMat.Data
             return totalRate / realValuesCount;
         }
 
-        private static double? WinRatioOnMatchesList(uint playerId, IEnumerable<MatchHistory> matches)
+        private static double? WinRatioOnMatchesList(uint playerId, IEnumerable<MatchArchive> matches)
         {
             return matches.Count() == 0 ?
                 (double?)null :
