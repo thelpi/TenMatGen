@@ -48,23 +48,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data\BestOfEnum.cs" />
+    <Compile Include="Data\Enums\BestOfEnum.cs" />
     <Compile Include="Data\Competition.cs" />
-    <Compile Include="Data\FifthSetTieBreakRuleEnum.cs" />
+    <Compile Include="Data\Enums\FifthSetTieBreakRuleEnum.cs" />
     <Compile Include="Data\Game.cs" />
     <Compile Include="Data\Match.cs" />
     <Compile Include="Data\Set.cs" />
     <Compile Include="DrawGenerator.cs" />
     <Compile Include="Sql\IDbCommandExtensions.cs" />
-    <Compile Include="Data\LevelEnum.cs" />
+    <Compile Include="Data\Enums\LevelEnum.cs" />
     <Compile Include="Sql\SqlMapper.cs" />
-    <Compile Include="Data\RoundEnum.cs" />
+    <Compile Include="Data\Enums\RoundEnum.cs" />
     <Compile Include="Data\MatchHistory.cs" />
     <Compile Include="Data\Player.cs" />
     <Compile Include="Data\Scoreboard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sql\IDataReaderExtensions.cs" />
-    <Compile Include="Data\SurfaceEnum.cs" />
+    <Compile Include="Data\Enums\SurfaceEnum.cs" />
     <Compile Include="Tools.cs" />
   </ItemGroup>
   <ItemGroup>

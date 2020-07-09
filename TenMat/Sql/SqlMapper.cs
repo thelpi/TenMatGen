@@ -4,6 +4,7 @@ using System.Data;
 using System.Text;
 using MySql.Data.MySqlClient;
 using TenMat.Data;
+using TenMat.Data.Enums;
 
 namespace TenMat.Sql
 {

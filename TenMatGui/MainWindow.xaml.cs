@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using TenMat;
 using TenMat.Data;
+using TenMat.Data.Enums;
 using TenMat.Sql;
 
 namespace TenMatGui

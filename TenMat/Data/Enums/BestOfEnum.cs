@@ -1,4 +1,4 @@
-﻿namespace TenMat.Data
+﻿namespace TenMat.Data.Enums
 {
     /// <summary>
     /// Number of sets best-of enumeration.
