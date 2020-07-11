@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="DrawGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Launcher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

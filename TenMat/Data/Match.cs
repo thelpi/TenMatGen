@@ -156,17 +156,12 @@ namespace TenMat.Data
             var matchesByYear = new Dictionary<int, double?[]>();
             for (int i = 0; i < MATCH_HISTORY_YEARS; i++)
             {
-                var matchesCoeff6 = p.FilterMatchHistoryList(Surface, Level, Round, opp.Id, _scoreboard.BestOf, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i));
-                var matchesCoeff5 = p.FilterMatchHistoryList(Surface, null, Round, opp.Id, _scoreboard.BestOf, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
-                    .Except(matchesCoeff6);
-                var matchesCoeff4 = p.FilterMatchHistoryList(Surface, null, null, opp.Id, _scoreboard.BestOf, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
-                    .Except(matchesCoeff6).Except(matchesCoeff5);
-                var matchesCoeff3 = p.FilterMatchHistoryList(Surface, null, null, opp.Id, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
-                    .Except(matchesCoeff6).Except(matchesCoeff5).Except(matchesCoeff4);
-                var matchesCoeff2 = p.FilterMatchHistoryList(null, null, null, opp.Id, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
-                    .Except(matchesCoeff6).Except(matchesCoeff5).Except(matchesCoeff4).Except(matchesCoeff3);
-                var matchesCoeff1 = p.FilterMatchHistoryList(null, null, null, null, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i))
-                    .Except(matchesCoeff6).Except(matchesCoeff5).Except(matchesCoeff4).Except(matchesCoeff3).Except(matchesCoeff2);
+                var matchesCoeff1 = p.FilterMatchHistoryList(null, null, null, null, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i));
+                var matchesCoeff2 = matchesCoeff1.Where(m => m.LoserId == opp.Id || m.WinnerId == opp.Id);
+                var matchesCoeff3 = matchesCoeff2.Where(m => m.Surface == Surface);
+                var matchesCoeff4 = matchesCoeff3.Where(m => m.BestOf == _scoreboard.BestOf);
+                var matchesCoeff5 = matchesCoeff4.Where(m => m.Round == Round);
+                var matchesCoeff6 = matchesCoeff5.Where(m => m.Level == Level);
                 matchesByYear.Add(i, new double?[]
                 {
                     WinRatioOnMatchesList(p.Id, matchesCoeff6),
