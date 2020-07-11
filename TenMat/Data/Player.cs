@@ -15,15 +15,15 @@ namespace TenMat.Data
         /// <summary>
         /// Unique identifier.
         /// </summary>
-        public uint Id { get; set; }
+        public uint Id { get; }
         /// <summary>
         /// Full name.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; }
         /// <summary>
         /// Date of birth.
         /// </summary>
-        public DateTime? DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; }
         /// <summary>
         /// Indicates if <see cref="MatchHistoryList"/> is set to its final value.
         /// </summary>
@@ -37,6 +37,45 @@ namespace TenMat.Data
             {
                 return _matchHistoryList;
             }
+        }
+
+        /// <summary>
+        /// Win rate by <see cref="SurfaceEnum"/>.
+        /// </summary>
+        public Dictionary<SurfaceEnum, double?> WinRateBySurface { get; private set; }
+        /// <summary>
+        /// Win rate by <see cref="LevelEnum"/>.
+        /// </summary>
+        public Dictionary<LevelEnum, double?> WinRateByLevel { get; private set; }
+        /// <summary>
+        /// Win rate by opponent identifier.
+        /// </summary>
+        public Dictionary<uint, double?> WinRateByOpponent { get; private set; }
+        /// <summary>
+        /// Win rate by year.
+        /// </summary>
+        public Dictionary<int, double?> WinRateByYear { get; private set; }
+        /// <summary>
+        /// Win rate by <see cref="BestOfEnum"/>.
+        /// </summary>
+        public Dictionary<BestOfEnum, double?> WinRateByBestOf { get; private set; }
+        /// <summary>
+        /// Win rate by <see cref="RoundEnum"/>.
+        /// </summary>
+        public Dictionary<RoundEnum, double?> WinRateByRound { get; private set; }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="id">The <see cref="Id"/> value.</param>
+        /// <param name="firstName">First name.</param>
+        /// <param name="lastName">Last name.</param>
+        /// <param name="dateOfBirth">The <see cref="DateOfBirth"/> value.</param>
+        public Player(uint id, string firstName, string lastName, DateTime? dateOfBirth)
+        {
+            Id = id;
+            Name = GetFullName(firstName, lastName);
+            DateOfBirth = dateOfBirth;
         }
 
         /// <summary>
@@ -54,63 +93,53 @@ namespace TenMat.Data
             _matchHistoryList.AddRange(
                 matchHistoryList.Where(mh => mh?.WinnerId == Id || mh.LoserId == Id)
             );
+
+            WinRateBySurface = Enum.GetValues(typeof(SurfaceEnum)).Cast<SurfaceEnum>()
+                .ToDictionary(s => s, s =>
+                    matchHistoryList.Count(m => m.Surface == s) == 0 ? (double?)null : (
+                        matchHistoryList.Count(m => m.Surface == s && m.WinnerId == Id)
+                        / (double)matchHistoryList.Count(m => m.Surface == s))
+                    );
+
+            WinRateByRound = Enum.GetValues(typeof(RoundEnum)).Cast<RoundEnum>()
+                .ToDictionary(s => s, s =>
+                    matchHistoryList.Count(m => m.Round == s) == 0 ? (double?)null : (
+                        matchHistoryList.Count(m => m.Round == s && m.WinnerId == Id)
+                        / (double)matchHistoryList.Count(m => m.Round == s))
+                    );
+
+            WinRateByLevel = Enum.GetValues(typeof(LevelEnum)).Cast<LevelEnum>()
+                .ToDictionary(s => s, s =>
+                    matchHistoryList.Count(m => m.Level == s) == 0 ? (double?)null : (
+                        matchHistoryList.Count(m => m.Level == s && m.WinnerId == Id)
+                        / (double)matchHistoryList.Count(m => m.Level == s))
+                    );
+
+            WinRateByBestOf = Enum.GetValues(typeof(BestOfEnum)).Cast<BestOfEnum>()
+                .ToDictionary(s => s, s =>
+                    matchHistoryList.Count(m => m.BestOf == s) == 0 ? (double?)null : (
+                        matchHistoryList.Count(m => m.BestOf == s && m.WinnerId == Id)
+                        / (double)matchHistoryList.Count(m => m.BestOf == s))
+                    );
+
+            WinRateByYear = matchHistoryList.GroupBy(m => m.TournamentBeginningDate.Year)
+                .ToDictionary(y => y.Key, y =>
+                    matchHistoryList.Count(m => m.TournamentBeginningDate.Year == y.Key) == 0 ? (double?)null : (
+                        matchHistoryList.Count(m => m.TournamentBeginningDate.Year == y.Key && m.WinnerId == Id)
+                        / (double)matchHistoryList.Count(m => m.TournamentBeginningDate.Year == y.Key))
+                    );
+
+            WinRateByOpponent = matchHistoryList.GroupBy(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId))
+                .ToDictionary(y => y.Key, y =>
+                    matchHistoryList.Count(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId) == y.Key) == 0 ? (double?)null : (
+                        matchHistoryList.Count(m => m.LoserId == y.Key && m.WinnerId == Id)
+                        / (double)matchHistoryList.Count(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId) == y.Key))
+                    );
+
             MatchHistorySet = true;
         }
-
-        /// <summary>
-        /// Filters matches from <see cref="MatchHistoryList"/> by criteria.
-        /// </summary>
-        /// <param name="surface">Optionnal; court surface.</param>
-        /// <param name="level">Optionnal; level of competition.</param>
-        /// <param name="round">Optionnal; round of competition.</param>
-        /// <param name="opponentId">Optionnal; opponent identifier.</param>
-        /// <param name="bestOf">Optionnal; best of three or five sets.</param>
-        /// <param name="dateMin">Optionnal; minimal date of the match.</param>
-        /// <param name="dateMax">Optionnal; maximal date of the match.</param>
-        /// <returns></returns>
-        public IEnumerable<MatchArchive> FilterMatchHistoryList(SurfaceEnum? surface = null,
-            LevelEnum? level = null, RoundEnum? round = null, uint? opponentId = null,
-            BestOfEnum? bestOf = null, DateTime? dateMin = null, DateTime? dateMax = null)
-        {
-            var matches = MatchHistoryList.AsEnumerable();
-            if (surface.HasValue)
-            {
-                matches = matches.Where(mg => mg.Surface == surface.Value);
-            }
-            if (level.HasValue)
-            {
-                matches = matches.Where(mg => mg.Level == level.Value);
-            }
-            if (round.HasValue)
-            {
-                matches = matches.Where(mg => mg.Round == round.Value);
-            }
-            if (opponentId.HasValue && opponentId.Value != Id)
-            {
-                matches = matches.Where(mg => mg.WinnerId == opponentId.Value || mg.LoserId == opponentId.Value);
-            }
-            if (bestOf.HasValue)
-            {
-                matches = matches.Where(mg => mg.BestOf == bestOf.Value);
-            }
-            if (dateMin.HasValue)
-            {
-                matches = matches.Where(mg => mg.TournamentBeginningDate.Date >= dateMin.Value.Date);
-            }
-            if (dateMax.HasValue)
-            {
-                matches = matches.Where(mg => mg.TournamentBeginningDate.Date <= dateMax.Value.Date);
-            }
-            return matches;
-        }
-
-        /// <summary>
-        /// Tool to get the fullname of a player for firstname and lastname.
-        /// </summary>
-        /// <param name="firstName">First name.</param>
-        /// <param name="lastName">Last name.</param>
-        /// <returns>Full name.</returns>
-        public static string GetFullName(string firstName, string lastName)
+        
+        private string GetFullName(string firstName, string lastName)
         {
             string fullName = string.Empty;
 

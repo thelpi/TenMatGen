@@ -14,7 +14,6 @@ namespace TenMat.Data
     {
         private const string EXEMPT_PLAYER_NAME = "Exempt";
         private const double DEF_SERVE_RATE = 0.7;
-        private const int MATCH_HISTORY_YEARS = 5;
 
         private readonly Scoreboard _scoreboard;
         private readonly Player _playerOne;
@@ -153,55 +152,29 @@ namespace TenMat.Data
 
         private double ComputeRatio(Player p, Player opp)
         {
-            var matchesByYear = new Dictionary<int, double?[]>();
-            for (int i = 0; i < MATCH_HISTORY_YEARS; i++)
+            var rates = new double?[]
             {
-                var matchesCoeff1 = p.FilterMatchHistoryList(null, null, null, null, null, TournamentBeginningDate.AddYears(-(i + 1)), TournamentBeginningDate.AddYears(-i));
-                var matchesCoeff2 = matchesCoeff1.Where(m => m.LoserId == opp.Id || m.WinnerId == opp.Id);
-                var matchesCoeff3 = matchesCoeff2.Where(m => m.Surface == Surface);
-                var matchesCoeff4 = matchesCoeff3.Where(m => m.BestOf == _scoreboard.BestOf);
-                var matchesCoeff5 = matchesCoeff4.Where(m => m.Round == Round);
-                var matchesCoeff6 = matchesCoeff5.Where(m => m.Level == Level);
-                matchesByYear.Add(i, new double?[]
-                {
-                    WinRatioOnMatchesList(p.Id, matchesCoeff6),
-                    WinRatioOnMatchesList(p.Id, matchesCoeff5),
-                    WinRatioOnMatchesList(p.Id, matchesCoeff4),
-                    WinRatioOnMatchesList(p.Id, matchesCoeff3),
-                    WinRatioOnMatchesList(p.Id, matchesCoeff2),
-                    WinRatioOnMatchesList(p.Id, matchesCoeff1),
-                });
-            }
-
-            double realValuesCount = 0;
+                p.WinRateByLevel[Level],
+                p.WinRateByRound[Round],
+                p.WinRateByBestOf[_scoreboard.BestOf],
+                p.WinRateBySurface[Surface],
+                p.WinRateByOpponent.ContainsKey(opp.Id) ? p.WinRateByOpponent[opp.Id] : null,
+                p.WinRateByYear.ContainsKey(TournamentBeginningDate.Year) ? p.WinRateByYear[TournamentBeginningDate.Year] : null
+            };
+            
             double totalRate = 0;
 
-            double yearRate = 1;
-            foreach (int year in matchesByYear.Keys)
+            double criteriaRate = 1;
+            for (int i = 0; i < rates.Length; i++)
             {
-                double criteriaRate = 1;
-                int countArgs = matchesByYear[year].Length;
-                for (int i = 0; i < countArgs; i++)
+                if (rates[i].HasValue)
                 {
-                    double currentRate = criteriaRate * yearRate;
-                    if (matchesByYear[year][i].HasValue)
-                    {
-                        totalRate += matchesByYear[year][i].Value * currentRate;
-                        realValuesCount++;
-                    }
-                    criteriaRate -= (1 / (double)countArgs);
+                    totalRate += rates[i].Value * criteriaRate;
                 }
-                yearRate -= (1 / (double)MATCH_HISTORY_YEARS);
+                criteriaRate -= (1 / (double)rates.Length);
             }
 
-            return totalRate / realValuesCount;
-        }
-
-        private static double? WinRatioOnMatchesList(uint playerId, IEnumerable<MatchArchive> matches)
-        {
-            return matches.Count() == 0 ?
-                (double?)null :
-                matches.Count(m => m.WinnerId == playerId) / (double)matches.Count();
+            return totalRate / rates.Count(r => r.HasValue);
         }
 
         private double GetCurrentPlayerServeRatio()

@@ -29,7 +29,7 @@ namespace TenMatTests
 
             for (int i = 0; i < drawSize; i++)
             {
-                sqlMap.LoadMatches(players.Keys.ElementAt(i), date.AddYears(-5), true);
+                sqlMap.LoadMatches(players.Keys.ElementAt(i), null, true); // date.AddYears(-5)
             }
 
             var dg = new DrawGenerator(drawSize, 1 / (double)8);

@@ -73,7 +73,7 @@ namespace TenMatGui
 
             for (int i = 0; i < drawSize; i++)
             {
-                sqlMap.LoadMatches(_players[i], startDate.AddYears(-5), true);
+                sqlMap.LoadMatches(_players[i], null, true); // startDate.AddYears(-5)
             }
 
             Competition cpt = new Competition(

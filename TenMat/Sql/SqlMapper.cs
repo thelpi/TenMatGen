@@ -120,12 +120,10 @@ namespace TenMat.Sql
             }, 
             (reader) =>
             {
-                newPlayerAction(new Player
-                {
-                    DateOfBirth = reader.Get<DateTime?>("birth_date"),
-                    Id = reader.Get<UInt32>("id"),
-                    Name = Player.GetFullName(reader.Get<string>("first_name"), reader.Get<string>("last_name"))
-                });
+                newPlayerAction(new Player(reader.Get<UInt32>("id"),
+                    reader.Get<string>("first_name"),
+                    reader.Get<string>("last_name"),
+                    reader.Get<DateTime?>("birth_date")));
             });
         }
 
