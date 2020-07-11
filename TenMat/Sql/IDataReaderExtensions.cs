@@ -21,12 +21,7 @@ namespace TenMat.Sql
         /// <exception cref="ArgumentException"><paramref name="columnName"/> is not in <paramref name="reader"/>.</exception>
         public static T Get<T>(this IDataReader reader, string columnName)
         {
-            if (!reader.HasColumn(columnName))
-            {
-                throw new ArgumentException("The specified column name is not in the data reader.", nameof(columnName));
-            }
-            
-            if (reader.IsDBNull(reader.GetOrdinal(columnName)))
+            if (reader.IsDBNull(columnName))
             {
                 return default(T);
             }
@@ -36,11 +31,6 @@ namespace TenMat.Sql
                 Type t = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
 
                 object valueToParse = reader[columnName];
-
-                if (t.IsEnum)
-                {
-
-                }
 
                 return (T)(t.IsEnum ? Enum.Parse(typeof(T), valueToParse.ToString())
                     : Convert.ChangeType(valueToParse, t));
@@ -87,6 +77,26 @@ namespace TenMat.Sql
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Checks if the specified column is <see cref="DBNull.Value"/> in the data reader.
+        /// </summary>
+        /// <param name="reader">Instance of <see cref="IDataReader"/>.</param>
+        /// <param name="columnName">The column name.</param>
+        /// <returns><c>True</c> if the column is <see cref="DBNull.Value"/>; <c>False</c> otherwise.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="reader"/> is <c>Null</c>.</exception>
+        /// <exception cref="ArgumentException">The <paramref name="reader"/> is closed.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="columnName"/> is <c>Null</c>, empty or white spaces only.</exception>
+        /// <exception cref="ArgumentException"><paramref name="columnName"/> is not in <paramref name="reader"/>.</exception>
+        public static bool IsDBNull(this IDataReader reader, string columnName)
+        {
+            if (!reader.HasColumn(columnName))
+            {
+                throw new ArgumentException("The specified column name is not in the data reader.", nameof(columnName));
+            }
+
+            return reader.IsDBNull(reader.GetOrdinal(columnName));
         }
     }
 }

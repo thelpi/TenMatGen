@@ -154,9 +154,13 @@ namespace TenMat.Sql
             {
                 var sbSql = new StringBuilder();
                 sbSql.AppendLine("SELECT best_of, winner_id, loser_id, round_id,");
-                sbSql.AppendLine("edition.date_begin, edition.level_id, edition.surface_id");
-                sbSql.AppendLine("FROM match_general");
+                sbSql.AppendLine("edition.date_begin, edition.level_id, edition.surface_id,");
+                sbSql.AppendLine("w_set_1, l_set_1, tb_set_1, w_set_2, l_set_2, tb_set_2,");
+                sbSql.AppendLine("w_set_3, l_set_3, tb_set_3, w_set_4, l_set_4, tb_set_4,");
+                sbSql.AppendLine("w_set_5, l_set_5, tb_set_5");
+                sbSql.AppendLine("FROM match_general AS mg");
                 sbSql.AppendLine("INNER JOIN edition ON edition_id = edition.id");
+                sbSql.AppendLine("INNER JOIN match_score AS ms ON mg.id = ms.match_id");
                 sbSql.AppendLine("WHERE (winner_id = @pid OR loser_id = @pid) AND walkover = 0 ");
                 if (afterThat.HasValue)
                 {
@@ -167,13 +171,31 @@ namespace TenMat.Sql
                 command.AddParameter("@pid", player.Id, DbType.UInt32);
             }, (reader) =>
             {
+                var sets = new List<Tuple<uint, uint, uint?>>();
+                for (int i = 1; i <= 5; i++)
+                {
+                    if (!reader.IsDBNull($"w_set_{i}") || !reader.IsDBNull($"w_set_{i}"))
+                    {
+                        sets.Add(new Tuple<uint, uint, uint?>(
+                            reader.Get<uint?>($"w_set_{i}").GetValueOrDefault(0),
+                            reader.Get<uint?>($"l_set_{i}").GetValueOrDefault(0),
+                            reader.Get<uint?>($"tb_set_{i}")
+                        ));
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
                 matches.Add(new MatchArchive(reader.Get<SurfaceEnum>("surface_id"),
                     reader.Get<LevelEnum>("level_id"),
                     reader.Get<RoundEnum>("round_id"),
                     (BestOfEnum)reader.Get<uint>("best_of"),
                     reader.Get<DateTime>("date_begin"),
                     reader.Get<uint>("winner_id"),
-                    reader.Get<uint>("loser_id")));
+                    reader.Get<uint>("loser_id"),
+                    sets));
             });
             player.SetMatchHistoryList(matches);
         }

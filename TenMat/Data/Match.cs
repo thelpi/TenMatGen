@@ -74,12 +74,12 @@ namespace TenMat.Data
 
             return new Match(p1, p2, competition.Surface, competition.Level, round,
                 round == RoundEnum.F ? competition.FinalBestOf : competition.BestOf,
-                competition.Date, competition.FifthSetTieBreakRule);
+                competition.Date, competition.FifthSetTieBreakRule, competition.PointByPoint);
         }
         
         private Match(Player p1, Player p2, SurfaceEnum surface, LevelEnum level,
             RoundEnum round, BestOfEnum bestOf, DateTime tournamentBeginningDate,
-            FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+            FifthSetTieBreakRuleEnum fifthSetTieBreakRule, bool pointByPoint)
             : base(surface, level, round, bestOf, tournamentBeginningDate)
         {
             _p2IsFirstToServe = Tools.FlipCoin();
@@ -87,7 +87,7 @@ namespace TenMat.Data
             _playerTwo = p2;
             if (p2 != null)
             {
-                _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetTieBreakRule);
+                _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetTieBreakRule, pointByPoint);
                 ComputeServeRate(out _p1ServeRatio, out _p2ServeRatio);
             }
         }

@@ -73,10 +73,11 @@ namespace TenMat.Data
         /// <param name="isFifthSet"><c>True</c> if it's the fifth set.</param>
         /// <param name="fifthSetTieBreakRule">The tie-break rule for the fifth set.</param>
         /// <param name="switchServer">Out; <c>True</c> if server has to switch.</param>
+        /// <param name="newGame">Out; <c>True</c> if a new game begins.</param>
         /// <returns><c>True</c> if the set ends.</returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be one or zero.</exception>
         /// <exception cref="InvalidOperationException">The instance is read-only.</exception>
-        public bool AddPoint(int playerIndex, bool isFifthSet, FifthSetTieBreakRuleEnum fifthSetTieBreakRule, out bool switchServer)
+        public bool AddPoint(int playerIndex, bool isFifthSet, FifthSetTieBreakRuleEnum fifthSetTieBreakRule, out bool switchServer, out bool newGame)
         {
             CheckPlayerIndex(playerIndex);
 
@@ -86,6 +87,7 @@ namespace TenMat.Data
             }
 
             switchServer = false;
+            newGame = false;
 
             if (HasTieBreak)
             {
@@ -103,6 +105,7 @@ namespace TenMat.Data
                     || (TieBreakPoints2 > 7 && TieBreakPoints1 <= TieBreakPoints2 - 2))
                 {
                     switchServer = true;
+                    newGame = true;
                     return AddGame(playerIndex, isFifthSet, fifthSetTieBreakRule);
                 }
                 else if ((TieBreakPoints1 + TieBreakPoints2) % 2 == 1)
@@ -113,6 +116,7 @@ namespace TenMat.Data
             else if (CurrentGame.AddPoint(playerIndex))
             {
                 switchServer = true;
+                newGame = true;
                 return AddGame(playerIndex, isFifthSet, fifthSetTieBreakRule);
             }
 
@@ -184,6 +188,26 @@ namespace TenMat.Data
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Set"/> instance from a match archive.
+        /// </summary>
+        /// <param name="winnerGamesCount">Winner games count.</param>
+        /// <param name="loserGamesCount">Loser games count.</param>
+        /// <param name="loserTieBreakPoints">Loser tie-break points.</param>
+        /// <returns><see cref="Set"/> instance.</returns>
+        public static Set CreateFromArchive(uint winnerGamesCount, uint loserGamesCount, uint? loserTieBreakPoints)
+        {
+            return new Set
+            {
+                Readonly = true,
+                Games1 = (int)winnerGamesCount,
+                Games2 = (int)loserGamesCount,
+                HasTieBreak = loserTieBreakPoints.HasValue,
+                TieBreakPoints2 = (int)loserTieBreakPoints.GetValueOrDefault(0),
+                TieBreakPoints1 = loserTieBreakPoints.HasValue ? (int)(loserTieBreakPoints.Value > 5 ? loserTieBreakPoints.Value + 2 : 7) : 0
+            };
         }
     }
 }

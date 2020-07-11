@@ -24,6 +24,10 @@ namespace TenMat.Data
         /// Index of the current server.
         /// </summary>
         public int CurrentServerIndex { get; private set; }
+        /// <summary>
+        /// Indicates if the scoring is made point by point or game by game.
+        /// </summary>
+        public bool PointByPoint { get; }
 
         /// <summary>
         /// Indicates if readonly (finished).
@@ -85,30 +89,76 @@ namespace TenMat.Data
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="bestOf"><see cref="BestOf"/> value.</param>
+        /// <param name="bestOf">The <see cref="BestOf"/> value.</param>
         /// <param name="p2AtServe"><c>True</c> if the second player is the first to serve.</param>
-        /// <param name="fifthSetTieBreakRule"><see cref="FifthSetTieBreakRule"/> value.</param>
-        public Scoreboard(BestOfEnum bestOf, bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule)
+        /// <param name="fifthSetTieBreakRule">The <see cref="FifthSetTieBreakRule"/> value.</param>
+        /// <param name="pointByPoint">The <see cref="PointByPoint"/> value.</param>
+        public Scoreboard(BestOfEnum bestOf, bool p2AtServe, FifthSetTieBreakRuleEnum fifthSetTieBreakRule, bool pointByPoint)
         {
             BestOf = bestOf;
             FifthSetTieBreakRule = fifthSetTieBreakRule;
             CurrentServerIndex = p2AtServe ? 1 : 0;
+            PointByPoint = pointByPoint;
         }
 
         /// <summary>
         /// Adds a point to the server.
         /// </summary>
+        /// <exception cref="InvalidOperationException">The scoreboard is not set point by point.</exception>
+        /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
         public void AddServerPoint()
         {
+            if (!PointByPoint)
+            {
+                throw new InvalidOperationException("The scoreboard is not set point by point.");
+            }
+
             AddPoint(CurrentServerIndex);
         }
 
         /// <summary>
         /// Adds a point to the receiver.
         /// </summary>
+        /// <exception cref="InvalidOperationException">The scoreboard is not set point by point.</exception>
+        /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
         public void AddReceiverPoint()
         {
+            if (!PointByPoint)
+            {
+                throw new InvalidOperationException("The scoreboard is not set point by point.");
+            }
+
             AddPoint(1 - CurrentServerIndex);
+        }
+
+        /// <summary>
+        /// Gives the gain of the current game to the server.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The scoreboard is set point by point.</exception>
+        /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
+        public void AddServerGame()
+        {
+            if (PointByPoint)
+            {
+                throw new InvalidOperationException("The scoreboard is set point by point.");
+            }
+
+            while (!AddPoint(CurrentServerIndex)) { }
+        }
+
+        /// <summary>
+        /// Gives the gain of the current game to the receiver.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The scoreboard is set point by point.</exception>
+        /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
+        public void AddReceiverGame()
+        {
+            if (PointByPoint)
+            {
+                throw new InvalidOperationException("The scoreboard is set point by point.");
+            }
+
+            while (!AddPoint(1 - CurrentServerIndex)) { }
         }
 
         /// <inheritdoc />
@@ -117,7 +167,7 @@ namespace TenMat.Data
             return string.Join(" - ", _sets.Select(set => set.ToString()));
         }
 
-        private void AddPoint(int playerIndex)
+        private bool AddPoint(int playerIndex)
         {
             if (Readonly)
             {
@@ -126,7 +176,7 @@ namespace TenMat.Data
 
             var set = _sets.Last();
 
-            bool newSet = set.AddPoint(playerIndex, _sets.Count == 5, FifthSetTieBreakRule, out bool switchServer);
+            bool newSet = set.AddPoint(playerIndex, _sets.Count == 5, FifthSetTieBreakRule, out bool switchServer, out bool newGame);
 
             if (switchServer)
             {
@@ -136,6 +186,8 @@ namespace TenMat.Data
             {
                 _sets.Add(new Set());
             }
+
+            return newGame;
         }
     }
 }

@@ -84,7 +84,8 @@ namespace TenMatGui
                 (SurfaceEnum)CbbSurface.SelectedItem,
                 _players.Take(drawSize),
                 (BestOfEnum)CbbBestOf.SelectedItem,
-                (BestOfEnum)CbbFinalBestOf.SelectedItem);
+                (BestOfEnum)CbbFinalBestOf.SelectedItem,
+                true);
 
             while (!cpt.Readonly)
             {

@@ -36,6 +36,10 @@ namespace TenMat.Data
         /// Sets best-of for final match.
         /// </summary>
         public BestOfEnum FinalBestOf { get; }
+        /// <summary>
+        /// The <see cref="Scoreboard.PointByPoint"/> value for every matches.
+        /// </summary>
+        public bool PointByPoint { get; }
 
         /// <summary>
         /// Draw by round.
@@ -72,6 +76,7 @@ namespace TenMat.Data
         /// <param name="availablePlayersRanked">List of available players, sorted by ranking.</param>
         /// <param name="bestOf">The <see cref="BestOf"/> value.</param>
         /// <param name="finalBestOf">The <see cref="FinalBestOf"/> value.</param>
+        /// <param name="pointByPoint">The <see cref="PointByPoint"/> value.</param>
         /// <exception cref="ArgumentNullException"><paramref name="drawGen"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="availablePlayersRanked"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="availablePlayersRanked"/> should not contain duplicates.</exception>
@@ -83,7 +88,8 @@ namespace TenMat.Data
             SurfaceEnum surface,
             IEnumerable<Player> availablePlayersRanked,
             BestOfEnum bestOf,
-            BestOfEnum finalBestOf)
+            BestOfEnum finalBestOf,
+            bool pointByPoint)
         {
             if (drawGen == null)
             {
@@ -105,6 +111,7 @@ namespace TenMat.Data
                 throw new ArgumentException("The list of players should contains at least two elements.", nameof(availablePlayersRanked));
             }
 
+            PointByPoint = pointByPoint;
             BestOf = bestOf;
             FinalBestOf = finalBestOf;
             FifthSetTieBreakRule = fifthSetTieBreakRule;
