@@ -18,8 +18,9 @@ namespace TenMat.Data
         private readonly Scoreboard _scoreboard;
         private readonly Player _playerOne;
         private readonly Player _playerTwo;
-        private readonly double _p1ServeRatio;
-        private readonly double _p2ServeRatio;
+        private readonly double _p1ServeRate;
+        private readonly double _p2ServeRate;
+        private readonly double _p1TieBreakRate;
         private readonly bool _p2IsFirstToServe;
 
         /// <summary>
@@ -84,10 +85,12 @@ namespace TenMat.Data
             _p2IsFirstToServe = Tools.FlipCoin();
             _playerOne = p1;
             _playerTwo = p2;
+            _p1TieBreakRate = 1;
             if (p2 != null)
             {
                 _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetTieBreakRule, pointByPoint);
-                ComputeServeRate(out _p1ServeRatio, out _p2ServeRatio);
+                ComputeServeRate(out _p1ServeRate, out _p2ServeRate);
+                _p1TieBreakRate = 0.5; // TODO
             }
         }
 
@@ -103,13 +106,36 @@ namespace TenMat.Data
 
             while (!_scoreboard.Readonly)
             {
-                if (Tools.Rdm.NextDouble() >= GetCurrentPlayerServeRatio())
+                if (_scoreboard.PointByPoint)
                 {
-                    _scoreboard.AddReceiverPoint();
+                    if (Tools.Rdm.NextDouble() >= GetCurrentPlayerServeRate())
+                    {
+                        _scoreboard.AddReceiverPoint();
+                    }
+                    else
+                    {
+                        _scoreboard.AddServerPoint();
+                    }
                 }
                 else
                 {
-                    _scoreboard.AddServerPoint();
+                    if (_scoreboard.IsCurrentlyTieBreak)
+                    {
+                        _scoreboard.AddTieBreak(
+                            Tools.Rdm.NextDouble() >= _p1TieBreakRate ?
+                                1 : 0);
+                    }
+                    else
+                    {
+                        if (Tools.Rdm.NextDouble() >= GetCurrentPlayerServeRate())
+                        {
+                            _scoreboard.AddReceiverGame();
+                        }
+                        else
+                        {
+                            _scoreboard.AddServerGame();
+                        }
+                    }
                 }
             }
         }
@@ -177,9 +203,9 @@ namespace TenMat.Data
             return totalRate / rates.Count(r => r.HasValue);
         }
 
-        private double GetCurrentPlayerServeRatio()
+        private double GetCurrentPlayerServeRate()
         {
-            return _scoreboard.CurrentServerIndex == 0 ? _p1ServeRatio : _p2ServeRatio;
+            return _scoreboard.CurrentServerIndex == 0 ? _p1ServeRate : _p2ServeRate;
         }
     }
 }

@@ -38,7 +38,7 @@ namespace TenMatTests
             {
                 var cpt = new Competition(dg, date, LevelEnum.GrandSlam,
                     FifthSetTieBreakRuleEnum.At12_12, SurfaceEnum.Hard,
-                    players.Keys, BestOfEnum.Five, BestOfEnum.Five, true);
+                    players.Keys, BestOfEnum.Five, BestOfEnum.Five, false);
 
                 while (!cpt.Readonly)
                 {

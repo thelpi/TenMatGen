@@ -87,6 +87,17 @@ namespace TenMat.Data
         }
 
         /// <summary>
+        /// Indicates if the current set is in tie-break.
+        /// </summary>
+        public bool IsCurrentlyTieBreak
+        {
+            get
+            {
+                return _sets.Last().HasTieBreak;
+            }
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="bestOf">The <see cref="BestOf"/> value.</param>
@@ -136,11 +147,17 @@ namespace TenMat.Data
         /// </summary>
         /// <exception cref="InvalidOperationException">The scoreboard is set point by point.</exception>
         /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
+        /// <exception cref="InvalidOperationException">Can't call this method while in tie-break.</exception>
         public void AddServerGame()
         {
             if (PointByPoint)
             {
                 throw new InvalidOperationException("The scoreboard is set point by point.");
+            }
+
+            if (IsCurrentlyTieBreak)
+            {
+                throw new InvalidOperationException("Can't call this method while in tie-break.");
             }
 
             while (!AddPoint(CurrentServerIndex)) { }
@@ -151,6 +168,7 @@ namespace TenMat.Data
         /// </summary>
         /// <exception cref="InvalidOperationException">The scoreboard is set point by point.</exception>
         /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
+        /// <exception cref="InvalidOperationException">Can't call this method while in tie-break.</exception>
         public void AddReceiverGame()
         {
             if (PointByPoint)
@@ -158,7 +176,34 @@ namespace TenMat.Data
                 throw new InvalidOperationException("The scoreboard is set point by point.");
             }
 
+            if (IsCurrentlyTieBreak)
+            {
+                throw new InvalidOperationException("Can't call this method while in tie-break.");
+            }
+
             while (!AddPoint(1 - CurrentServerIndex)) { }
+        }
+
+        /// <summary>
+        /// Gives the tie-break to the specified player index.
+        /// </summary>
+        /// <param name="playerIndex">Player index.</param>
+        /// <exception cref="InvalidOperationException">The scoreboard is set point by point.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be 0 or 1.</exception>
+        /// <exception cref="InvalidOperationException">The instance is readonly.</exception>
+        public void AddTieBreak(int playerIndex)
+        {
+            if (PointByPoint)
+            {
+                throw new InvalidOperationException("The scoreboard is set point by point.");
+            }
+
+            if (playerIndex < 0 || playerIndex > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(playerIndex), playerIndex, "Player index should be 0 or 1.");
+            }
+
+            while (!AddPoint(playerIndex)) { }
         }
 
         /// <inheritdoc />

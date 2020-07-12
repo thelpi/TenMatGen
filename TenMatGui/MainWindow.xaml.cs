@@ -85,7 +85,7 @@ namespace TenMatGui
                 _players.Take(drawSize),
                 (BestOfEnum)CbbBestOf.SelectedItem,
                 (BestOfEnum)CbbFinalBestOf.SelectedItem,
-                true);
+                false);
 
             while (!cpt.Readonly)
             {
