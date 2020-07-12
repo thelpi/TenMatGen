@@ -10,15 +10,27 @@ namespace TenMat.Data
         private static readonly int[] GAME_POINTS = new int[] { 0, 15, 30, 40 };
 
         private bool _readonly;
+        private readonly int[] _playersGames = new int[2] { 0, 0 };
 
         /// <summary>
-        /// Points for player one.
+        /// Gets games count for specified player.
         /// </summary>
-        public int Points1 { get; private set; }
-        /// <summary>
-        /// Points for player two.
-        /// </summary>
-        public int Points2 { get; private set; }
+        /// <param name="i">Player index.</param>
+        /// <returns>Player games count.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="i"/> should be 0 or 1.</exception>
+        public int this[int i]
+        {
+            get
+            {
+                if (i < 0 || i > 1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(i), i, "Player index should be 0 or 1.");
+                }
+
+                return _playersGames[i];
+            }
+        }
+
         /// <summary>
         /// Indicates if a player has advantage at 40/40.
         /// </summary>
@@ -32,8 +44,8 @@ namespace TenMat.Data
             get
             {
                 return AdvantagePlayerIndex == null
-                    && Points1 == GAME_POINTS[3]
-                    && Points2 == GAME_POINTS[3];
+                    && _playersGames[0] == GAME_POINTS[3]
+                    && _playersGames[1] == GAME_POINTS[3];
             }
         }
 
@@ -69,23 +81,23 @@ namespace TenMat.Data
             }
             else if (playerIndex == 1)
             {
-                if (Points2 == GAME_POINTS[3])
+                if (_playersGames[1] == GAME_POINTS[3])
                 {
                     _readonly = true;
                     return true;
                 }
 
-                Points2 = GAME_POINTS[Array.IndexOf(GAME_POINTS, Points2) + 1];
+                _playersGames[1] = GAME_POINTS[Array.IndexOf(GAME_POINTS, _playersGames[1]) + 1];
             }
             else
             {
-                if (Points1 == GAME_POINTS[3])
+                if (_playersGames[0] == GAME_POINTS[3])
                 {
                     _readonly = true;
                     return true;
                 }
 
-                Points1 = GAME_POINTS[Array.IndexOf(GAME_POINTS, Points1) + 1];
+                _playersGames[0] = GAME_POINTS[Array.IndexOf(GAME_POINTS, _playersGames[0]) + 1];
             }
 
             return false;
@@ -99,7 +111,7 @@ namespace TenMat.Data
                 return string.Empty;
             }
 
-            return string.Concat(Points1, AdvantageToString(0), " - ", Points2, AdvantageToString(1));
+            return string.Concat(_playersGames[0], AdvantageToString(0), " - ", _playersGames[1], AdvantageToString(1));
         }
 
         private string AdvantageToString(int playerIndex)
