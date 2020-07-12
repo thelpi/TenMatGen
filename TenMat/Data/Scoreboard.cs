@@ -64,11 +64,11 @@ namespace TenMat.Data
 
                 if (_sets.Last().CurrentGame != null)
                 {
-                    if (_sets.Last().CurrentGame[0] > _sets.Last().CurrentGame[1])
+                    if (_sets.Last().IsWonBy(0))
                     {
                         return 0;
                     }
-                    else if (_sets.Last().CurrentGame[1] > _sets.Last().CurrentGame[0])
+                    else if (_sets.Last().IsWonBy(1))
                     {
                         return 1;
                     }

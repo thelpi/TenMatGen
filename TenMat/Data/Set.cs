@@ -50,18 +50,16 @@ namespace TenMat.Data
         }
 
         /// <summary>
-        /// Indicates if the specified player has won the set.
+        /// Indicates if the specified player has won / is leading the set.
         /// </summary>
         /// <param name="playerIndex">Player index.</param>
-        /// <returns><c>True</c> if <paramref name="playerIndex"/> has won of the set.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be one or zero.</exception>
+        /// <returns><c>True</c> if <paramref name="playerIndex"/> has won / is leading the set.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be 0 or 1.</exception>
         public bool IsWonBy(int playerIndex)
         {
             CheckPlayerIndex(playerIndex);
 
-            return playerIndex == 0 ?
-                _playersGames[0] > _playersGames[1] :
-                _playersGames[1] > _playersGames[0];
+            return _playersGames[playerIndex] > _playersGames[1 - playerIndex];
         }
 
         /// <summary>
@@ -154,7 +152,7 @@ namespace TenMat.Data
         {
             if (playerIndex < 0 || playerIndex > 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(playerIndex), playerIndex, "The value should be one or zero.");
+                throw new ArgumentOutOfRangeException(nameof(playerIndex), playerIndex, "Player index should be 0 or 1.");
             }
         }
 

@@ -13,25 +13,6 @@ namespace TenMat.Data
         private readonly int[] _playersPoints = new[] { GAME_POINTS[0], GAME_POINTS[0] };
 
         /// <summary>
-        /// Gets points value for specified player.
-        /// </summary>
-        /// <param name="i">Player index.</param>
-        /// <returns>Player points value.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="i"/> should be 0 or 1.</exception>
-        public int this[int i]
-        {
-            get
-            {
-                if (i < 0 || i > 1)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(i), i, "Player index should be 0 or 1.");
-                }
-
-                return _playersPoints[i];
-            }
-        }
-
-        /// <summary>
         /// Indicates if a player has advantage at 40/40.
         /// </summary>
         public int? AdvantagePlayerIndex { get; private set; }
@@ -47,6 +28,19 @@ namespace TenMat.Data
                     && _playersPoints[0] == GAME_POINTS[3]
                     && _playersPoints[1] == GAME_POINTS[3];
             }
+        }
+
+        /// <summary>
+        /// Gets if the specified player has won or is leading the game.
+        /// </summary>
+        /// <param name="playerIndex">Player index.</param>
+        /// <returns><c>True</c> if the specified player has won / is leading the game.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be 0 or 1.</exception>
+        public bool IsWonBy(int playerIndex)
+        {
+            CheckPlayerIndex(playerIndex);
+
+            return _playersPoints[playerIndex] > _playersPoints[1 - playerIndex];
         }
 
         /// <summary>
@@ -123,7 +117,7 @@ namespace TenMat.Data
         {
             if (playerIndex < 0 || playerIndex > 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(playerIndex), playerIndex, "The value should be one or zero.");
+                throw new ArgumentOutOfRangeException(nameof(playerIndex), playerIndex, "Player index should be 0 or 1.");
             }
         }
     }
