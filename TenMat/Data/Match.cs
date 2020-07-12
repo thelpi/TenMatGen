@@ -179,12 +179,12 @@ namespace TenMat.Data
         {
             var rates = new double?[]
             {
-                p.WinRateByLevel[Level],
-                p.WinRateByRound[Round],
-                p.WinRateByBestOf[_scoreboard.BestOf],
-                p.WinRateBySurface[Surface],
-                p.WinRateByOpponent.ContainsKey(opp.Id) ? p.WinRateByOpponent[opp.Id] : null,
-                p.WinRateByYear.ContainsKey(TournamentBeginningDate.Year) ? p.WinRateByYear[TournamentBeginningDate.Year] : null
+                p.SbGameRateByLevel[Level],
+                p.SvGameRateByRound[Round],
+                p.SvGameRateByBestOf[_scoreboard.BestOf],
+                p.SvGameRateBySurface[Surface],
+                p.SvGameRateByOpponent.ContainsKey(opp.Id) ? p.SvGameRateByOpponent[opp.Id] : null,
+                p.SvGameRateByYear.ContainsKey(TournamentBeginningDate.Year) ? p.SvGameRateByYear[TournamentBeginningDate.Year] : null
             };
             
             double totalRate = 0;

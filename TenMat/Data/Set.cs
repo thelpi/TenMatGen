@@ -50,6 +50,19 @@ namespace TenMat.Data
         }
 
         /// <summary>
+        /// Gets the games count for a specified player in this set.
+        /// </summary>
+        /// <param name="playerIndex">Player index.</param>
+        /// <returns>Games count.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="playerIndex"/> should be 0 or 1.</exception>
+        public int Games(int playerIndex)
+        {
+            CheckPlayerIndex(playerIndex);
+
+            return _playersGames[playerIndex];
+        }
+
+        /// <summary>
         /// Indicates if the specified player has won / is leading the set.
         /// </summary>
         /// <param name="playerIndex">Player index.</param>

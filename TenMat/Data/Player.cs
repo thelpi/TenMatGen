@@ -12,6 +12,19 @@ namespace TenMat.Data
     {
         private readonly List<MatchArchive> _matchHistoryList = new List<MatchArchive>();
 
+        private readonly Dictionary<SurfaceEnum, double?> _svGameRateBySurface
+            = new Dictionary<SurfaceEnum, double?>();
+        private readonly Dictionary<LevelEnum, double?> _svGameRateByLevel
+            = new Dictionary<LevelEnum, double?>();
+        private readonly Dictionary<uint, double?> _svGameRateByOpponent
+            = new Dictionary<uint, double?>();
+        private readonly Dictionary<int, double?> _svGameRateByYear
+            = new Dictionary<int, double?>();
+        private readonly Dictionary<BestOfEnum, double?> _svGameRateByBestOf
+            = new Dictionary<BestOfEnum, double?>();
+        private readonly Dictionary<RoundEnum, double?> _svGameRateByRound
+            = new Dictionary<RoundEnum, double?>();
+
         /// <summary>
         /// Unique identifier.
         /// </summary>
@@ -40,29 +53,29 @@ namespace TenMat.Data
         }
 
         /// <summary>
-        /// Win rate by <see cref="SurfaceEnum"/>.
+        /// Games win rate by <see cref="SurfaceEnum"/>.
         /// </summary>
-        public Dictionary<SurfaceEnum, double?> WinRateBySurface { get; private set; }
+        public IReadOnlyDictionary<SurfaceEnum, double?> SvGameRateBySurface { get { return _svGameRateBySurface; } }
         /// <summary>
-        /// Win rate by <see cref="LevelEnum"/>.
+        /// Games win rate by <see cref="LevelEnum"/>.
         /// </summary>
-        public Dictionary<LevelEnum, double?> WinRateByLevel { get; private set; }
+        public IReadOnlyDictionary<LevelEnum, double?> SbGameRateByLevel { get { return _svGameRateByLevel; } }
         /// <summary>
-        /// Win rate by opponent identifier.
+        /// Games win rate by opponent identifier.
         /// </summary>
-        public Dictionary<uint, double?> WinRateByOpponent { get; private set; }
+        public IReadOnlyDictionary<uint, double?> SvGameRateByOpponent { get { return _svGameRateByOpponent; } }
         /// <summary>
-        /// Win rate by year.
+        /// Games win rate by year.
         /// </summary>
-        public Dictionary<int, double?> WinRateByYear { get; private set; }
+        public IReadOnlyDictionary<int, double?> SvGameRateByYear { get { return _svGameRateByYear; } }
         /// <summary>
-        /// Win rate by <see cref="BestOfEnum"/>.
+        /// Games win rate by <see cref="BestOfEnum"/>.
         /// </summary>
-        public Dictionary<BestOfEnum, double?> WinRateByBestOf { get; private set; }
+        public IReadOnlyDictionary<BestOfEnum, double?> SvGameRateByBestOf { get { return _svGameRateByBestOf; } }
         /// <summary>
-        /// Win rate by <see cref="RoundEnum"/>.
+        /// Games win rate by <see cref="RoundEnum"/>.
         /// </summary>
-        public Dictionary<RoundEnum, double?> WinRateByRound { get; private set; }
+        public IReadOnlyDictionary<RoundEnum, double?> SvGameRateByRound { get { return _svGameRateByRound; } }
 
         /// <summary>
         /// Constructor.
@@ -91,54 +104,59 @@ namespace TenMat.Data
 
             _matchHistoryList.Clear();
             _matchHistoryList.AddRange(
+                // redundant with the database query; just to be safe.
                 matchHistoryList.Where(mh => mh?.WinnerId == Id || mh.LoserId == Id)
             );
 
-            WinRateBySurface = Enum.GetValues(typeof(SurfaceEnum)).Cast<SurfaceEnum>()
-                .ToDictionary(s => s, s =>
-                    matchHistoryList.Count(m => m.Surface == s) == 0 ? (double?)null : (
-                        matchHistoryList.Count(m => m.Surface == s && m.WinnerId == Id)
-                        / (double)matchHistoryList.Count(m => m.Surface == s))
-                    );
-
-            WinRateByRound = Enum.GetValues(typeof(RoundEnum)).Cast<RoundEnum>()
-                .ToDictionary(s => s, s =>
-                    matchHistoryList.Count(m => m.Round == s) == 0 ? (double?)null : (
-                        matchHistoryList.Count(m => m.Round == s && m.WinnerId == Id)
-                        / (double)matchHistoryList.Count(m => m.Round == s))
-                    );
-
-            WinRateByLevel = Enum.GetValues(typeof(LevelEnum)).Cast<LevelEnum>()
-                .ToDictionary(s => s, s =>
-                    matchHistoryList.Count(m => m.Level == s) == 0 ? (double?)null : (
-                        matchHistoryList.Count(m => m.Level == s && m.WinnerId == Id)
-                        / (double)matchHistoryList.Count(m => m.Level == s))
-                    );
-
-            WinRateByBestOf = Enum.GetValues(typeof(BestOfEnum)).Cast<BestOfEnum>()
-                .ToDictionary(s => s, s =>
-                    matchHistoryList.Count(m => m.BestOf == s) == 0 ? (double?)null : (
-                        matchHistoryList.Count(m => m.BestOf == s && m.WinnerId == Id)
-                        / (double)matchHistoryList.Count(m => m.BestOf == s))
-                    );
-
-            WinRateByYear = matchHistoryList.GroupBy(m => m.TournamentBeginningDate.Year)
-                .ToDictionary(y => y.Key, y =>
-                    matchHistoryList.Count(m => m.TournamentBeginningDate.Year == y.Key) == 0 ? (double?)null : (
-                        matchHistoryList.Count(m => m.TournamentBeginningDate.Year == y.Key && m.WinnerId == Id)
-                        / (double)matchHistoryList.Count(m => m.TournamentBeginningDate.Year == y.Key))
-                    );
-
-            WinRateByOpponent = matchHistoryList.GroupBy(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId))
-                .ToDictionary(y => y.Key, y =>
-                    matchHistoryList.Count(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId) == y.Key) == 0 ? (double?)null : (
-                        matchHistoryList.Count(m => m.LoserId == y.Key && m.WinnerId == Id)
-                        / (double)matchHistoryList.Count(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId) == y.Key))
-                    );
+            ComputeGameRateByCriterion(
+                _svGameRateBySurface,
+                Enum.GetValues(typeof(SurfaceEnum)).Cast<SurfaceEnum>(),
+                s => _matchHistoryList.Where(m => m.Surface == s)
+            );
+            ComputeGameRateByCriterion(
+                _svGameRateByLevel,
+                Enum.GetValues(typeof(LevelEnum)).Cast<LevelEnum>(),
+                l => _matchHistoryList.Where(m => m.Level == l)
+            );
+            ComputeGameRateByCriterion(
+                _svGameRateByOpponent,
+                _matchHistoryList.Select(m => m.WinnerId == Id ? m.LoserId : m.WinnerId).Distinct(),
+                oId => _matchHistoryList.Where(m => (m.WinnerId == Id ? m.LoserId : m.WinnerId) == oId)
+            );
+            ComputeGameRateByCriterion(
+                _svGameRateByYear,
+                _matchHistoryList.Select(m => m.TournamentBeginningDate.Year).Distinct(),
+                y => _matchHistoryList.Where(m => m.TournamentBeginningDate.Year == y)
+            );
+            ComputeGameRateByCriterion(
+                _svGameRateByBestOf,
+                Enum.GetValues(typeof(BestOfEnum)).Cast<BestOfEnum>(),
+                b => _matchHistoryList.Where(m => m.BestOf == b)
+            );
+            ComputeGameRateByCriterion(
+                _svGameRateByRound,
+                Enum.GetValues(typeof(RoundEnum)).Cast<RoundEnum>(),
+                r => _matchHistoryList.Where(m => m.Round == r)
+            );
 
             MatchHistorySet = true;
         }
-        
+
+        private void ComputeGameRateByCriterion<T>(
+            Dictionary<T, double?> dictionary,
+            IEnumerable<T> keys,
+            Func<T, IEnumerable<MatchArchive>> matchesFilter)
+        {
+            dictionary.Clear();
+            foreach (T key in keys)
+            {
+                int gamesCount = matchesFilter(key).Sum(m => m.Sets.Sum(s => s.GamesCount));
+                int gamesCountAsWinner = matchesFilter(key).Where(m => m.WinnerId == Id).Sum(m => m.Sets.Sum(s => s.Games(0)));
+                int gamesCountAsLoser = matchesFilter(key).Where(m => m.LoserId == Id).Sum(m => m.Sets.Sum(s => s.Games(1)));
+                dictionary.Add(key, gamesCount == 0 ? (double?)null : (gamesCountAsWinner + gamesCountAsLoser) / (double)gamesCount);
+            }
+        }
+
         private string GetFullName(string firstName, string lastName)
         {
             string fullName = string.Empty;
