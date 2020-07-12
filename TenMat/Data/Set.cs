@@ -15,26 +15,13 @@ namespace TenMat.Data
             new Game()
         };
 
+        private readonly int[] _playersGames = new int[] { 0, 0 };
+        private readonly int[] _playersTieBreakPoints = new int[] { 0, 0 };
+
         /// <summary>
         /// Indicates if readonly (finished).
         /// </summary>
         public bool Readonly { get; private set; }
-        /// <summary>
-        /// Games for player one.
-        /// </summary>
-        public int Games1 { get; private set; }
-        /// <summary>
-        /// Games for player two.
-        /// </summary>
-        public int Games2 { get; private set; }
-        /// <summary>
-        /// Tie-break points for player one.
-        /// </summary>
-        public int TieBreakPoints1 { get; private set; }
-        /// <summary>
-        /// Tie-break points for player two.
-        /// </summary>
-        public int TieBreakPoints2 { get; private set; }
         /// <summary>
         /// Indicates if the set ahs a tie-break.
         /// </summary>
@@ -52,6 +39,17 @@ namespace TenMat.Data
         }
 
         /// <summary>
+        /// Games count.
+        /// </summary>
+        public int GamesCount
+        {
+            get
+            {
+                return _playersGames[0] + _playersGames[1];
+            }
+        }
+
+        /// <summary>
         /// Indicates if the specified player has won the set.
         /// </summary>
         /// <param name="playerIndex">Player index.</param>
@@ -62,8 +60,8 @@ namespace TenMat.Data
             CheckPlayerIndex(playerIndex);
 
             return playerIndex == 0 ?
-                Games1 > Games2 :
-                Games2 > Games1;
+                _playersGames[0] > _playersGames[1] :
+                _playersGames[1] > _playersGames[0];
         }
 
         /// <summary>
@@ -93,22 +91,22 @@ namespace TenMat.Data
             {
                 if (playerIndex == 1)
                 {
-                    TieBreakPoints2++;
+                    _playersTieBreakPoints[1]++;
                 }
                 else
                 {
-                    TieBreakPoints1++;
+                    _playersTieBreakPoints[0]++;
                 }
-                if ((TieBreakPoints1 == 7 && TieBreakPoints2 <= 5)
-                    || (TieBreakPoints1 > 7 && TieBreakPoints2 <= TieBreakPoints1 - 2)
-                    || (TieBreakPoints2 == 7 && TieBreakPoints1 <= 5)
-                    || (TieBreakPoints2 > 7 && TieBreakPoints1 <= TieBreakPoints2 - 2))
+                if ((_playersTieBreakPoints[0] == 7 && _playersTieBreakPoints[1] <= 5)
+                    || (_playersTieBreakPoints[0] > 7 && _playersTieBreakPoints[1] <= _playersTieBreakPoints[0] - 2)
+                    || (_playersTieBreakPoints[1] == 7 && _playersTieBreakPoints[0] <= 5)
+                    || (_playersTieBreakPoints[1] > 7 && _playersTieBreakPoints[0] <= _playersTieBreakPoints[1] - 2))
                 {
                     switchServer = true;
                     newGame = true;
                     return AddGame(playerIndex, isFifthSet, fifthSetTieBreakRule);
                 }
-                else if ((TieBreakPoints1 + TieBreakPoints2) % 2 == 1)
+                else if ((_playersTieBreakPoints[0] + _playersTieBreakPoints[1]) % 2 == 1)
                 {
                     switchServer = true;
                 }
@@ -128,14 +126,14 @@ namespace TenMat.Data
         {
             if (Readonly)
             {
-                return string.Concat(Games1, TieBreakToString(TieBreakPoints1),
-                    "/", Games2, TieBreakToString(TieBreakPoints2));
+                return string.Concat(_playersGames[0], TieBreakToString(_playersTieBreakPoints[0]),
+                    "/", _playersGames[1], TieBreakToString(_playersTieBreakPoints[1]));
             }
 
-            var baseString = string.Concat(Games1, "/", Games2);
+            var baseString = string.Concat(_playersGames[0], "/", _playersGames[1]);
             if (HasTieBreak)
             {
-                baseString += string.Concat(" | [", TieBreakPoints1, "]-[", TieBreakPoints2, "]");
+                baseString += string.Concat(" | [", _playersTieBreakPoints[0], "]-[", _playersTieBreakPoints[1], "]");
             }
             else
             {
@@ -148,7 +146,7 @@ namespace TenMat.Data
         private string TieBreakToString(int tieBreakPoints)
         {
             return HasTieBreak
-                && Math.Min(TieBreakPoints1, TieBreakPoints2) == tieBreakPoints ?
+                && Math.Min(_playersTieBreakPoints[0], _playersTieBreakPoints[1]) == tieBreakPoints ?
                     string.Concat("[", tieBreakPoints, "]") : string.Empty;
         }
 
@@ -164,24 +162,24 @@ namespace TenMat.Data
         {
             if (playerIndex == 1)
             {
-                Games2++;
+                _playersGames[1]++;
             }
             else
             {
-                Games1++;
+                _playersGames[0]++;
             }
 
             _games.Add(new Game());
 
-            if ((Games1 == 6 && Games2 == 6) && (!isFifthSet || fifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At6_6))
+            if ((_playersGames[0] == 6 && _playersGames[1] == 6) && (!isFifthSet || fifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At6_6))
             {
                 HasTieBreak = true;
             }
-            else if ((Games1 == 12 && Games2 == 12) && isFifthSet && fifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At12_12)
+            else if ((_playersGames[0] == 12 && _playersGames[1] == 12) && isFifthSet && fifthSetTieBreakRule == FifthSetTieBreakRuleEnum.At12_12)
             {
                 HasTieBreak = true;
             }
-            else if (HasTieBreak || ((Games1 >= 6 || Games2 >= 6) && Math.Abs(Games1 - Games2) > 1))
+            else if (HasTieBreak || ((_playersGames[0] >= 6 || _playersGames[1] >= 6) && Math.Abs(_playersGames[0] - _playersGames[1]) > 1))
             {
                 Readonly = true;
                 return true;
@@ -199,15 +197,16 @@ namespace TenMat.Data
         /// <returns><see cref="Set"/> instance.</returns>
         public static Set CreateFromArchive(uint winnerGamesCount, uint loserGamesCount, uint? loserTieBreakPoints)
         {
-            return new Set
+            var set = new Set
             {
                 Readonly = true,
-                Games1 = (int)winnerGamesCount,
-                Games2 = (int)loserGamesCount,
-                HasTieBreak = loserTieBreakPoints.HasValue,
-                TieBreakPoints2 = (int)loserTieBreakPoints.GetValueOrDefault(0),
-                TieBreakPoints1 = loserTieBreakPoints.HasValue ? (int)(loserTieBreakPoints.Value > 5 ? loserTieBreakPoints.Value + 2 : 7) : 0
+                HasTieBreak = loserTieBreakPoints.HasValue
             };
+            set._playersGames[0] = (int)winnerGamesCount;
+            set._playersGames[1] = (int)loserGamesCount;
+            set._playersTieBreakPoints[0] = loserTieBreakPoints.HasValue ? (int)(loserTieBreakPoints.Value > 5 ? loserTieBreakPoints.Value + 2 : 7) : 0;
+            set._playersTieBreakPoints[1] = (int)loserTieBreakPoints.GetValueOrDefault(0);
+            return set;
         }
     }
 }

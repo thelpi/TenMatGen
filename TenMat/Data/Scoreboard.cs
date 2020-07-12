@@ -53,11 +53,11 @@ namespace TenMat.Data
                     return 1;
                 }
 
-                if (_sets.Last().Games1 > _sets.Last().Games2)
+                if (_sets.Last().IsWonBy(0))
                 {
                     return 0;
                 }
-                else if (_sets.Last().Games1 < _sets.Last().Games2)
+                else if (_sets.Last().IsWonBy(1))
                 {
                     return 1;
                 }

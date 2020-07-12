@@ -39,7 +39,7 @@ namespace TenMat.Data
         {
             get
             {
-                return Sets.Sum(s => s.Games1 + s.Games2) - Sets.Count(s => s.HasTieBreak);
+                return Sets.Sum(s => s.GamesCount) - Sets.Count(s => s.HasTieBreak);
             }
         }
         /// <summary>
