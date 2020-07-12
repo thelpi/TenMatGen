@@ -12,11 +12,11 @@ namespace TenMat.Data
     public class MatchArchive : MatchBase
     {
         /// <summary>
-        /// Winner player identifier.
+        /// Winner player identifier; always index <c>0</c>.
         /// </summary>
         public uint WinnerId { get; }
         /// <summary>
-        /// Loser player identifier.
+        /// Loser player identifier; always index <c>1</c>.
         /// </summary>
         public uint LoserId { get; }
         /// <summary>
