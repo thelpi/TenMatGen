@@ -179,7 +179,7 @@ namespace TenMat.Data
         {
             var rates = new double?[]
             {
-                p.SbGameRateByLevel[Level],
+                p.SvGameRateByLevel[Level],
                 p.SvGameRateByRound[Round],
                 p.SvGameRateByBestOf[_scoreboard.BestOf],
                 p.SvGameRateBySurface[Surface],
