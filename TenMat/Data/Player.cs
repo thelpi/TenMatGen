@@ -163,7 +163,7 @@ namespace TenMat.Data
             );
             ComputeGameRateByCriterion(
                 _svGameRateByYear, _tieBreakRateByYear,
-                _matchHistoryList.Select(m => m.TournamentBeginningDate.Year).Distinct(),
+                Enumerable.Range(Tools.OPEN_ERA_YEAR, DateTime.Now.Year - Tools.OPEN_ERA_YEAR),
                 y => _matchHistoryList.Where(m => m.TournamentBeginningDate.Year == y)
             );
             ComputeGameRateByCriterion(

@@ -17,7 +17,7 @@ namespace TenMatGui
     public partial class MainWindow : Window
     {
         private readonly DateTime _lastRanking = new DateTime(2019, 03, 04);
-        private readonly DateTime _firstRanking = new DateTime(1968, 01, 29);
+        private readonly DateTime _firstRanking = new DateTime(1990, 12, 31);
         private readonly List<Player> _players = new List<Player>();
         private readonly SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
 
@@ -36,7 +36,7 @@ namespace TenMatGui
             CbbSeedRate.ItemsSource = new List<double> { 0.5, 0.25, 0.125, 0.0625, 0.03125, 0 };
             CbbSurface.ItemsSource = Enum.GetValues(typeof(SurfaceEnum));
 
-            TxtDate.Text = _lastRanking.ToString("yyyy-MM-dd");
+            TxtDate.Text = _firstRanking.GetRandomDate(_lastRanking).ToString("yyyy-MM-dd");
             CbbBestOf.SelectedIndex = 1;
             CbbFinalBestOf.SelectedIndex = 1;
             CbbDrawSize.SelectedIndex = 6;

@@ -12,6 +12,8 @@ namespace TenMat.Data
     {
         private readonly List<Set> _sets = new List<Set> { new Set() };
 
+        private int _currentServerIndex;
+
         /// <summary>
         /// <see cref="BestOfEnum"/> value.
         /// </summary>
@@ -20,10 +22,6 @@ namespace TenMat.Data
         /// Tie-break rule for fifth set.
         /// </summary>
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; }
-        /// <summary>
-        /// Index of the current server.
-        /// </summary>
-        public int CurrentServerIndex { get; private set; }
         /// <summary>
         /// Indicates if the scoring is made point by point or game by game.
         /// </summary>
@@ -98,6 +96,17 @@ namespace TenMat.Data
         }
 
         /// <summary>
+        /// Indicates if the current player at serve is the first player.
+        /// </summary>
+        public bool IsFirstPlayerAtServe
+        {
+            get
+            {
+                return _currentServerIndex == 0;
+            }
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="bestOf">The <see cref="BestOf"/> value.</param>
@@ -108,7 +117,7 @@ namespace TenMat.Data
         {
             BestOf = bestOf;
             FifthSetTieBreakRule = fifthSetTieBreakRule;
-            CurrentServerIndex = p2AtServe ? 1 : 0;
+            _currentServerIndex = p2AtServe ? 1 : 0;
             PointByPoint = pointByPoint;
         }
 
@@ -124,7 +133,7 @@ namespace TenMat.Data
                 throw new InvalidOperationException("The scoreboard is not set point by point.");
             }
 
-            AddPoint(CurrentServerIndex);
+            AddPoint(_currentServerIndex);
         }
 
         /// <summary>
@@ -139,7 +148,7 @@ namespace TenMat.Data
                 throw new InvalidOperationException("The scoreboard is not set point by point.");
             }
 
-            AddPoint(1 - CurrentServerIndex);
+            AddPoint(1 - _currentServerIndex);
         }
 
         /// <summary>
@@ -160,7 +169,7 @@ namespace TenMat.Data
                 throw new InvalidOperationException("Can't call this method while in tie-break.");
             }
 
-            while (!AddPoint(CurrentServerIndex)) { }
+            while (!AddPoint(_currentServerIndex)) { }
         }
 
         /// <summary>
@@ -181,7 +190,7 @@ namespace TenMat.Data
                 throw new InvalidOperationException("Can't call this method while in tie-break.");
             }
 
-            while (!AddPoint(1 - CurrentServerIndex)) { }
+            while (!AddPoint(1 - _currentServerIndex)) { }
         }
 
         /// <summary>
@@ -225,7 +234,7 @@ namespace TenMat.Data
 
             if (switchServer)
             {
-                CurrentServerIndex = 1 - CurrentServerIndex;
+                _currentServerIndex = 1 - _currentServerIndex;
             }
             if (newSet && _sets.Count(s => s.IsWonBy(playerIndex)) != ((int)BestOf + 1) / 2)
             {

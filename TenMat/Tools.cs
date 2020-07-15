@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using TenMat.Data;
 using TenMat.Data.Enums;
 
 namespace TenMat
@@ -11,6 +10,11 @@ namespace TenMat
     /// </summary>
     public static class Tools
     {
+        /// <summary>
+        /// First year of the open era.
+        /// </summary>
+        public const int OPEN_ERA_YEAR = 1968;
+
         private static readonly Dictionary<int, RoundEnum> _roundByDrawSize = new Dictionary<int, RoundEnum>
         {
             { 65, RoundEnum.R128 },
@@ -63,6 +67,31 @@ namespace TenMat
                 .OrderByDescending(kvp => kvp.Key)
                 .First(kvp => kvp.Key <= drawSize)
                 .Value;
+        }
+
+        /// <summary>
+        /// Gets a random <see cref="DateTime"/> between the specified range.
+        /// </summary>
+        /// <param name="start">Start date.</param>
+        /// <param name="end">End date.</param>
+        /// <returns>Random <see cref="DateTime"/>.</returns>
+        public static DateTime GetRandomDate(this DateTime start, DateTime end)
+        {
+            if (start.Date == end.Date)
+            {
+                return start.Date;
+            }
+
+            if (start.Date > end.Date)
+            {
+                DateTime tmp = end;
+                end = start;
+                start = tmp;
+            }
+
+            var daysMax = (int)((end.Date - start.Date).TotalDays);
+
+            return start.Date.AddDays(Rdm.Next(daysMax));
         }
     }
 }

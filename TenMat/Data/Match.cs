@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TenMat.Data.Enums;
@@ -12,7 +13,14 @@ namespace TenMat.Data
     public class Match : MatchBase
     {
         private const string EXEMPT_PLAYER_NAME = "Exempt";
-        private const double DEF_SERVE_RATE = 0.7;
+        private const double DEF_SERVE_RATE = 2 / (double)3;
+
+        private const double RATE_COEFF_BESTOF = 2 / (double)3;
+        private const double RATE_COEFF_LEVEL = 3 / (double)4;
+        private const double RATE_COEFF_OPPONENT = 3 / (double)2;
+        private const double RATE_COEFF_ROUND = 3 / (double)4;
+        private const double RATE_COEFF_SURFACE = 4 / (double)3;
+        private const double RATE_COEFF_YEAR = 4 / (double)3;
 
         private readonly Scoreboard _scoreboard;
         private readonly Player _playerOne;
@@ -88,8 +96,11 @@ namespace TenMat.Data
             if (p2 != null)
             {
                 _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetTieBreakRule, pointByPoint);
-                ComputeServeRate(out _p1ServeRate, out _p2ServeRate);
-                _p1TieBreakRate = 0.5; // TODO
+                _p1ServeRate = ComputeSvGameRate(_playerOne);
+                _p2ServeRate = ComputeSvGameRate(_playerTwo);
+                double p1TieBreakRate = ComputeTieBreakRate(_playerOne);
+                double p2TieBreakRate = ComputeTieBreakRate(_playerTwo);
+                _p1TieBreakRate = (p1TieBreakRate + p2TieBreakRate) / 2;
             }
         }
 
@@ -154,57 +165,85 @@ namespace TenMat.Data
             return sb.ToString();
         }
 
-        private void ComputeServeRate(out double player1Rate, out double player2Rate)
-        {
-            player1Rate = DEF_SERVE_RATE;
-            player2Rate = DEF_SERVE_RATE;
-
-            double p1Rate = ComputeRatio(_playerOne, _playerTwo);
-            double p2Rate = ComputeRatio(_playerTwo, _playerOne);
-            double delta = p1Rate / (p1Rate + p2Rate);
-
-            if (delta > 0.5)
-            {
-                player1Rate += (delta * 0.2);
-                player2Rate -= ((1 - delta) * 0.2);
-            }
-            else if (delta < 0.5)
-            {
-                player1Rate -= (delta * 0.2);
-                player2Rate += ((1 - delta) * 0.2);
-            }
-        }
-
-        private double ComputeRatio(Player p, Player opp)
-        {
-            var rates = new double?[]
-            {
-                p.SvGameRateByLevel[Level],
-                p.SvGameRateByRound[Round],
-                p.SvGameRateByBestOf[_scoreboard.BestOf],
-                p.SvGameRateBySurface[Surface],
-                p.SvGameRateByOpponent.ContainsKey(opp.Id) ? p.SvGameRateByOpponent[opp.Id] : null,
-                p.SvGameRateByYear.ContainsKey(TournamentBeginningDate.Year) ? p.SvGameRateByYear[TournamentBeginningDate.Year] : null
-            };
-            
-            double totalRate = 0;
-
-            double criteriaRate = 1;
-            for (int i = 0; i < rates.Length; i++)
-            {
-                if (rates[i].HasValue)
-                {
-                    totalRate += rates[i].Value * criteriaRate;
-                }
-                criteriaRate -= (1 / (double)rates.Length);
-            }
-
-            return totalRate / rates.Count(r => r.HasValue);
-        }
-
         private double GetCurrentPlayerServeRate()
         {
-            return _scoreboard.CurrentServerIndex == 0 ? _p1ServeRate : _p2ServeRate;
+            return _scoreboard.IsFirstPlayerAtServe ? _p1ServeRate : _p2ServeRate;
+        }
+
+        private double ComputeSvGameRate(Player p)
+        {
+            uint oppId = p.Id == _playerOne.Id ? _playerTwo.Id : _playerOne.Id;
+
+            var rateCoefficients = new List<double>();
+            if (p.SvGameRateByLevel[Level].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateByLevel[Level].Value * RATE_COEFF_LEVEL);
+            }
+            if (p.SvGameRateByRound[Round].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateByRound[Round].Value * RATE_COEFF_ROUND);
+            }
+            if (p.SvGameRateByBestOf[BestOf].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateByBestOf[BestOf].Value * RATE_COEFF_BESTOF);
+            }
+            if (p.SvGameRateByYear[TournamentBeginningDate.Year].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateByYear[TournamentBeginningDate.Year].Value * RATE_COEFF_YEAR);
+            }
+            if (p.SvGameRateByOpponent.ContainsKey(oppId) && p.SvGameRateByOpponent[oppId].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateByOpponent[oppId].Value * RATE_COEFF_OPPONENT);
+            }
+            if (p.SvGameRateBySurface[Surface].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateBySurface[Surface].Value * RATE_COEFF_SURFACE);
+            }
+
+            if (rateCoefficients.Count == 0)
+            {
+                return DEF_SERVE_RATE;
+            }
+
+            return rateCoefficients.Sum() / rateCoefficients.Count;
+        }
+
+        private double ComputeTieBreakRate(Player p)
+        {
+            uint oppId = p.Id == _playerOne.Id ? _playerTwo.Id : _playerOne.Id;
+
+            var rateCoefficients = new List<double>();
+            if (p.TieBreakRateByLevel[Level].HasValue)
+            {
+                rateCoefficients.Add(p.TieBreakRateByLevel[Level].Value * RATE_COEFF_LEVEL);
+            }
+            if (p.TieBreakRateByRound[Round].HasValue)
+            {
+                rateCoefficients.Add(p.TieBreakRateByRound[Round].Value * RATE_COEFF_ROUND);
+            }
+            if (p.SvGameRateByBestOf[BestOf].HasValue)
+            {
+                rateCoefficients.Add(p.SvGameRateByBestOf[BestOf].Value * RATE_COEFF_BESTOF);
+            }
+            if (p.TieBreakRateByYear[TournamentBeginningDate.Year].HasValue)
+            {
+                rateCoefficients.Add(p.TieBreakRateByYear[TournamentBeginningDate.Year].Value * RATE_COEFF_YEAR);
+            }
+            if (p.TieBreakRateByOpponent.ContainsKey(oppId) && p.TieBreakRateByOpponent[oppId].HasValue)
+            {
+                rateCoefficients.Add(p.TieBreakRateByOpponent[oppId].Value * RATE_COEFF_OPPONENT);
+            }
+            if (p.TieBreakRateBySurface[Surface].HasValue)
+            {
+                rateCoefficients.Add(p.TieBreakRateBySurface[Surface].Value * RATE_COEFF_SURFACE);
+            }
+
+            if (rateCoefficients.Count == 0)
+            {
+                return 0.5;
+            }
+
+            return rateCoefficients.Sum() / rateCoefficients.Count;
         }
     }
 }
