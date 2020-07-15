@@ -61,6 +61,11 @@ namespace TenMat.Data
             {
                 var round = _draw.Keys.Last();
 
+                if (_draw[round].Count == 0)
+                {
+                    return false;
+                }
+
                 return round == RoundEnum.F && _draw[round][0].Winner != null;
             }
         }

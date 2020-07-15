@@ -20,6 +20,8 @@ namespace TenMatGui
         private readonly DateTime _firstRanking = new DateTime(1990, 12, 31);
         private readonly List<Player> _players = new List<Player>();
         private readonly SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
+        private readonly IReadOnlyCollection<int> _drawSizes = new List<int> { 8, 16, 32, 64, 128 };
+        private readonly IReadOnlyCollection<int> _seedRates = new List<int> { 2, 4, 8, 16, 32, 0 };
 
         /// <summary>
         /// Constructor.
@@ -30,19 +32,17 @@ namespace TenMatGui
 
             CbbBestOf.ItemsSource = Enum.GetValues(typeof(BestOfEnum));
             CbbFinalBestOf.ItemsSource = Enum.GetValues(typeof(BestOfEnum));
-            CbbDrawSize.ItemsSource = new List<int> { 2, 4, 8, 16, 32, 64, 128 };
+            CbbDrawSize.ItemsSource = _drawSizes;
             CbbFifthSetRule.ItemsSource = Enum.GetValues(typeof(FifthSetTieBreakRuleEnum));
             CbbLevel.ItemsSource = Enum.GetValues(typeof(LevelEnum));
-            CbbSeedRate.ItemsSource = new List<double> { 0.5, 0.25, 0.125, 0.0625, 0.03125, 0 };
             CbbSurface.ItemsSource = Enum.GetValues(typeof(SurfaceEnum));
 
-            TxtDate.Text = _firstRanking.GetRandomDate(_lastRanking).ToString("yyyy-MM-dd");
+            TxtDate.Text = _lastRanking.ToString("yyyy-MM-dd");
             CbbBestOf.SelectedIndex = 1;
             CbbFinalBestOf.SelectedIndex = 1;
             CbbDrawSize.SelectedIndex = 6;
             CbbFifthSetRule.SelectedIndex = 2;
             CbbLevel.SelectedIndex = 0;
-            CbbSeedRate.SelectedIndex = 2;
             CbbSurface.SelectedIndex = 2;
         }
 
@@ -76,8 +76,10 @@ namespace TenMatGui
                 sqlMap.LoadMatches(_players[i], null, true); // startDate.AddYears(-5)
             }
 
+            var seedRate = (int)CbbSeedRate.SelectedItem;
+
             Competition cpt = new Competition(
-                new DrawGenerator(drawSize, (double)CbbSeedRate.SelectedItem),
+                new DrawGenerator(drawSize, seedRate == 0 ? 0 : 1 / (double)seedRate),
                 startDate,
                 (LevelEnum)CbbLevel.SelectedItem,
                 (FifthSetTieBreakRuleEnum)CbbFifthSetRule.SelectedItem,
@@ -116,6 +118,32 @@ namespace TenMatGui
             }
 
             GrdMain.Children.Add(sp);
+        }
+
+        private void BtnRandomize_Click(object sender, RoutedEventArgs e)
+        {
+            TxtDate.Text = _firstRanking.GetRandomDate(_lastRanking).ToString("yyyy-MM-dd");
+            CbbBestOf.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(BestOfEnum)).Length);
+            CbbFinalBestOf.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(BestOfEnum)).Length);
+            CbbDrawSize.SelectedIndex = Tools.Rdm.Next(0, _drawSizes.Count);
+            CbbFifthSetRule.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(FifthSetTieBreakRuleEnum)).Length);
+            CbbLevel.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(LevelEnum)).Length);
+            CbbSurface.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(SurfaceEnum)).Length);
+        }
+
+        private void SetCbbSeedRateFromDrawSize(int drawSize)
+        {
+            var seedRatesPickList = _seedRates.Where(sr => sr < drawSize).ToList();
+            CbbSeedRate.ItemsSource = seedRatesPickList;
+            CbbSeedRate.SelectedIndex = Tools.Rdm.Next(0, seedRatesPickList.Count);
+        }
+
+        private void CbbDrawSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (CbbDrawSize.SelectedIndex >= 0)
+            {
+                SetCbbSeedRateFromDrawSize((int)CbbDrawSize.SelectedItem);
+            }
         }
     }
 }

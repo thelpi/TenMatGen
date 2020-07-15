@@ -7,7 +7,8 @@
         Title="TenMatGui" Height="450" Width="800">
     <DockPanel Margin="5">
         <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
+            <Button Name="BtnRandomize" Click="BtnRandomize_Click" Content="Randomize" />
+            <StackPanel Orientation="Horizontal" Margin="0, 5, 0, 0">
                 <Label Content="Surface :" Width="100" HorizontalContentAlignment="Right" Background="Gainsboro" />
                 <ComboBox Name="CbbSurface" Margin="5, 0, 0, 0" Width="100" />
             </StackPanel>
@@ -33,7 +34,7 @@
             </StackPanel>
             <StackPanel Margin="0, 5, 0, 0" Orientation="Horizontal">
                 <Label Content="Draw size :" Width="100" HorizontalContentAlignment="Right" Background="Gainsboro" />
-                <ComboBox Name="CbbDrawSize" Margin="5, 0, 0, 0" Width="100" />
+                <ComboBox Name="CbbDrawSize" Margin="5, 0, 0, 0" Width="100" SelectionChanged="CbbDrawSize_SelectionChanged" />
             </StackPanel>
             <StackPanel Margin="0, 5, 0, 0" Orientation="Horizontal">
                 <Label Content="SeedRate :" Width="100" HorizontalContentAlignment="Right" Background="Gainsboro" />

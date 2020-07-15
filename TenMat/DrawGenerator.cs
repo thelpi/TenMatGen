@@ -146,7 +146,7 @@ namespace TenMat
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             var matchesCountWithSeed = matchesBySeed.Sum(ms => ms.Count);
-            var matchesUnseededCountBetweenTwoSeededMatch = unseededMatches.Count / matchesCountWithSeed;
+            var matchesUnseededCountBetweenTwoSeededMatch = matchesCountWithSeed == 0 ? 0 : unseededMatches.Count / matchesCountWithSeed;
             for (int i = 0; i < matchesCountWithSeed; i++)
             {
                 int stackIndex = 0;
