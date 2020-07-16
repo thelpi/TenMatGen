@@ -23,6 +23,9 @@ namespace TenMatGui
         private readonly IReadOnlyCollection<int> _drawSizes = new List<int> { 8, 16, 32, 64, 128 };
         private readonly IReadOnlyCollection<int> _seedRates = new List<int> { 2, 4, 8, 16, 32, 0 };
 
+        private DateTime _lastDateLoaded;
+        private int _maxDrawSizeAtDate;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -68,13 +71,19 @@ namespace TenMatGui
 
             int drawSize = (int)CbbDrawSize.SelectedItem;
 
-            _players.Clear();
-            sqlMap.LoadPlayers((p) => _players.Add(p), null, startDate);
-
-            for (int i = 0; i < drawSize; i++)
+            if (drawSize > _maxDrawSizeAtDate || _lastDateLoaded.Date != startDate.Date)
             {
-                sqlMap.LoadMatches(_players[i], matchesDateMax: startDate);
+                _players.Clear();
+                sqlMap.LoadPlayers((p) => _players.Add(p), null, startDate);
+
+                for (int i = 0; i < drawSize; i++)
+                {
+                    sqlMap.LoadMatches(_players[i], matchesDateMax: startDate);
+                }
             }
+
+            _lastDateLoaded = startDate;
+            _maxDrawSizeAtDate = Math.Max(_maxDrawSizeAtDate, drawSize);
 
             var seedRate = (int)CbbSeedRate.SelectedItem;
 
