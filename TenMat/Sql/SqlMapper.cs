@@ -84,11 +84,13 @@ namespace TenMat.Sql
         /// Loads players from the database by criteria.
         /// </summary>
         /// <param name="newPlayerAction">The action to execute with the loaded player.</param>
-        /// <param name="youngerThan">Filters only players younger than the specified date.</param>
-        /// <param name="sortByRankingAtDate">Applies a sort on the query based on the ranking at the specified date.</param>
+        /// <param name="sortByRankingAtDate">Optionnal; applies a sort on the query based on the ranking at the specified date.</param>
+        /// <param name="playersCount">Optionnal; players count to get.</param>
         /// <exception cref="InvalidOperationException">An exception occured</exception>
         /// <exception cref="ArgumentNullException"><paramref name="newPlayerAction"/> is <c>Null</c>.</exception>
-        public void LoadPlayers(Action<Player> newPlayerAction, DateTime? youngerThan, DateTime? sortByRankingAtDate)
+        public void LoadPlayers(Action<Player> newPlayerAction,
+            DateTime? sortByRankingAtDate = null,
+            uint? playersCount = null)
         {
             if (newPlayerAction == null)
             {
@@ -99,11 +101,6 @@ namespace TenMat.Sql
             {
                 var sqlBuilder = new StringBuilder();
                 sqlBuilder.AppendLine("SELECT id, first_name, last_name, birth_date FROM player");
-                if (youngerThan.HasValue)
-                {
-                    sqlBuilder.AppendLine("WHERE birth_date >= @dob");
-                    command.AddDateTimeParameter("@dob", youngerThan.Value);
-                }
                 if (sortByRankingAtDate.HasValue)
                 {
                     sqlBuilder.AppendLine("ORDER BY IFNULL((");
@@ -115,6 +112,10 @@ namespace TenMat.Sql
                     sqlBuilder.AppendLine(" LIMIT 0,1");
                     sqlBuilder.AppendLine("), 9999) ASC");
                     command.AddDateTimeParameter("@rank_date", sortByRankingAtDate.Value);
+                }
+                if (playersCount.HasValue)
+                {
+                    sqlBuilder.AppendLine($"LIMIT 0, {playersCount.Value}");
                 }
                 command.CommandText = sqlBuilder.ToString();
             }, 

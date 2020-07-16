@@ -20,11 +20,10 @@ namespace TenMatGui
         private readonly DateTime _firstRanking = new DateTime(1990, 12, 31);
         private readonly List<Player> _players = new List<Player>();
         private readonly SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
-        private readonly IReadOnlyCollection<int> _drawSizes = new List<int> { 8, 16, 32, 64, 128 };
-        private readonly IReadOnlyCollection<int> _seedRates = new List<int> { 2, 4, 8, 16, 32, 0 };
+        private readonly IReadOnlyCollection<uint> _drawSizes = new List<uint> { 8, 16, 32, 64, 128 };
+        private readonly IReadOnlyCollection<uint> _seedRates = new List<uint> { 2, 4, 8, 16, 32, 0 };
 
         private DateTime _lastDateLoaded;
-        private int _maxDrawSizeAtDate;
 
         /// <summary>
         /// Constructor.
@@ -69,23 +68,21 @@ namespace TenMatGui
             GrdMain.ColumnDefinitions.Clear();
             GrdMain.Children.Clear();
 
-            int drawSize = (int)CbbDrawSize.SelectedItem;
-
-            if (drawSize > _maxDrawSizeAtDate || _lastDateLoaded.Date != startDate.Date)
+            if (_lastDateLoaded.Date != startDate.Date)
             {
                 _players.Clear();
-                sqlMap.LoadPlayers((p) => _players.Add(p), null, startDate);
+                sqlMap.LoadPlayers((p) => _players.Add(p), startDate, _drawSizes.Max());
 
-                for (int i = 0; i < drawSize; i++)
+                for (int i = 0; i < _drawSizes.Max(); i++)
                 {
                     sqlMap.LoadMatches(_players[i], matchesDateMax: startDate);
                 }
             }
 
+            var drawSize = (int)((uint)CbbDrawSize.SelectedItem);
             _lastDateLoaded = startDate;
-            _maxDrawSizeAtDate = Math.Max(_maxDrawSizeAtDate, drawSize);
 
-            var seedRate = (int)CbbSeedRate.SelectedItem;
+            var seedRate = (uint)CbbSeedRate.SelectedItem;
 
             Competition cpt = new Competition(
                 new DrawGenerator(drawSize, seedRate == 0 ? 0 : 1 / (double)seedRate),
@@ -140,7 +137,7 @@ namespace TenMatGui
             CbbSurface.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(SurfaceEnum)).Length);
         }
 
-        private void SetCbbSeedRateFromDrawSize(int drawSize)
+        private void SetCbbSeedRateFromDrawSize(uint drawSize)
         {
             var seedRatesPickList = _seedRates.Where(sr => sr < drawSize).ToList();
             CbbSeedRate.ItemsSource = seedRatesPickList;
@@ -151,7 +148,7 @@ namespace TenMatGui
         {
             if (CbbDrawSize.SelectedIndex >= 0)
             {
-                SetCbbSeedRateFromDrawSize((int)CbbDrawSize.SelectedItem);
+                SetCbbSeedRateFromDrawSize((uint)CbbDrawSize.SelectedItem);
             }
         }
     }
