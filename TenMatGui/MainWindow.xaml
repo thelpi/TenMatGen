@@ -42,8 +42,19 @@
             </StackPanel>
             <Button Name="BtnGenerate" Click="BtnGenerate_Click" Content="Generate !" Margin="0, 5, 0, 0" Foreground="Red" />
         </StackPanel>
-        <Grid Name="GrdMain" DockPanel.Dock="Right">
+        <ListBox Name="LstPlayers">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Height="25" Orientation="Horizontal">
+                        <Label Height="22" VerticalAlignment="Center" Content="{Binding Path=PlayerName}" Width="100" />
+                        <Rectangle Height="22" VerticalAlignment="Center" Width="{Binding Path=StatWidth}" Fill="Red" />
+                        <Label Height="22" VerticalAlignment="Center" Content="{Binding Path=PlayerPercent}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <!--<Grid Name="GrdMain" DockPanel.Dock="Right">
             
-        </Grid>
+        </Grid>-->
     </DockPanel>
 </Window>

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -7,6 +9,7 @@ using TenMat;
 using TenMat.Data;
 using TenMat.Data.Enums;
 using TenMat.Sql;
+using TenMatGui.ViewModel;
 
 namespace TenMatGui
 {
@@ -16,12 +19,16 @@ namespace TenMatGui
     /// <seealso cref="Window"/>
     public partial class MainWindow : Window
     {
+        private const int MaxPlayersListed = 50;
+
         private readonly DateTime _lastRanking = new DateTime(2019, 03, 04);
         private readonly DateTime _firstRanking = new DateTime(1990, 12, 31);
         private readonly List<Player> _players = new List<Player>();
         private readonly SqlMapper sqlMap = new SqlMapper("localhost", "nice_tennis_denis", "root", null);
         private readonly IReadOnlyCollection<uint> _drawSizes = new List<uint> { 8, 16, 32, 64, 128 };
         private readonly IReadOnlyCollection<uint> _seedRates = new List<uint> { 2, 4, 8, 16, 32, 0 };
+        private readonly BackgroundWorker _bgw;
+        private readonly List<PlayerStat> _playerStats = new List<PlayerStat>();
 
         private DateTime _lastDateLoaded;
 
@@ -46,10 +53,70 @@ namespace TenMatGui
             CbbFifthSetRule.SelectedIndex = 2;
             CbbLevel.SelectedIndex = 0;
             CbbSurface.SelectedIndex = 2;
+
+            _bgw = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            _bgw.DoWork += (object sender, DoWorkEventArgs e) =>
+            {
+                _playerStats.Clear();
+                PlayerStat.ResetCpt();
+
+                var arg = e.Argument as BgwArg;
+
+                while (!_bgw.CancellationPending)
+                {
+                    Competition cpt = new Competition(
+                    new DrawGenerator(arg.DrawSize, arg.SeedRate == 0 ? 0 : 1 / (double)arg.SeedRate),
+                    arg.StartDate,
+                    arg.Level,
+                    arg.FifthSetTieBreakRule,
+                    arg.Surface,
+                    arg.Players,
+                    arg.BestOf,
+                    arg.FinalBestOf,
+                    false);
+
+                    while (!cpt.Readonly)
+                    {
+                        var round = cpt.Draw.Keys.Last();
+                        cpt.NextRound();
+                    }
+
+                    _bgw.ReportProgress(0, cpt.Draw[RoundEnum.F].First().Winner);
+                }
+            };
+            _bgw.ProgressChanged += (object sender, ProgressChangedEventArgs e) =>
+            {
+                var p = e.UserState as Player;
+
+                var matchPl = _playerStats.FirstOrDefault(_ => _.Id == p.Id);
+                if (matchPl == null)
+                {
+                    matchPl = new PlayerStat(p);
+                    _playerStats.Add(matchPl);
+                }
+                matchPl.AddCpt();
+
+                _playerStats.ForEach(_ => _.RefreshCpt());
+                _playerStats.Sort();
+                LstPlayers.ItemsSource = _playerStats.Take(MaxPlayersListed);
+            };
         }
 
         private void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
+            if (_bgw.IsBusy)
+            {
+                if (!_bgw.CancellationPending)
+                {
+                    _bgw.CancelAsync();
+                }
+                return;
+            }
+
             if (!DateTime.TryParse(TxtDate.Text, out DateTime startDate)
                 || startDate > _lastRanking
                 || startDate < _firstRanking
@@ -64,9 +131,6 @@ namespace TenMatGui
                 MessageBox.Show("Incomplete or invalid informations.");
                 return;
             }
-
-            GrdMain.ColumnDefinitions.Clear();
-            GrdMain.Children.Clear();
 
             if (_lastDateLoaded.Date != startDate.Date)
             {
@@ -84,46 +148,18 @@ namespace TenMatGui
 
             var seedRate = (uint)CbbSeedRate.SelectedItem;
 
-            Competition cpt = new Competition(
-                new DrawGenerator(drawSize, seedRate == 0 ? 0 : 1 / (double)seedRate),
-                startDate,
-                (LevelEnum)CbbLevel.SelectedItem,
-                (FifthSetTieBreakRuleEnum)CbbFifthSetRule.SelectedItem,
-                (SurfaceEnum)CbbSurface.SelectedItem,
-                _players.Take(drawSize),
-                (BestOfEnum)CbbBestOf.SelectedItem,
-                (BestOfEnum)CbbFinalBestOf.SelectedItem,
-                false);
-
-            while (!cpt.Readonly)
+            _bgw.RunWorkerAsync(new BgwArg
             {
-                var round = cpt.Draw.Keys.Last();
-                cpt.NextRound();
-                LogMatches(cpt, round);
-            }
-        }
-
-        private void LogMatches(Competition competition, RoundEnum round)
-        {
-            GrdMain.ColumnDefinitions.Add(new ColumnDefinition());
-
-            StackPanel sp = new StackPanel
-            {
-                Orientation = Orientation.Vertical
-            };
-            sp.SetValue(Grid.ColumnProperty, GrdMain.ColumnDefinitions.Count - 1);
-            sp.SetValue(Grid.RowProperty, 0);
-
-            Label lbl = new Label { Content = round.ToString() };
-            sp.Children.Add(lbl);
-
-            foreach (var match in competition.Draw[round])
-            {
-                lbl = new Label { Content = match.ToString() };
-                sp.Children.Add(lbl);
-            }
-
-            GrdMain.Children.Add(sp);
+                FifthSetTieBreakRule = (FifthSetTieBreakRuleEnum)CbbFifthSetRule.SelectedItem,
+                DrawSize = drawSize,
+                StartDate = startDate,
+                BestOf = (BestOfEnum)CbbBestOf.SelectedItem,
+                FinalBestOf = (BestOfEnum)CbbFinalBestOf.SelectedItem,
+                Level = (LevelEnum)CbbLevel.SelectedItem,
+                Players = _players.Take(drawSize).ToList(),
+                SeedRate = seedRate,
+                Surface = (SurfaceEnum)CbbSurface.SelectedItem
+            });
         }
 
         private void BtnRandomize_Click(object sender, RoutedEventArgs e)
