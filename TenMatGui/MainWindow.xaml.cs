@@ -73,7 +73,7 @@ namespace TenMatGui
 
             for (int i = 0; i < drawSize; i++)
             {
-                sqlMap.LoadMatches(_players[i], null, true); // startDate.AddYears(-5)
+                sqlMap.LoadMatches(_players[i], matchesDateMax: startDate);
             }
 
             var seedRate = (int)CbbSeedRate.SelectedItem;

@@ -63,7 +63,7 @@ namespace TenMat.Data
 
                 if (_draw[round].Count == 0)
                 {
-                    return false;
+                    throw new InvalidOperationException("Should not happen.");
                 }
 
                 return round == RoundEnum.F && _draw[round][0].Winner != null;
@@ -135,6 +135,11 @@ namespace TenMat.Data
                         round))
                 .ToList();
 
+            if (drawRound.Count == 0)
+            {
+                throw new InvalidOperationException("Should not happen.");
+            }
+
             _draw.Add(round, drawRound);
         }
 
@@ -164,6 +169,11 @@ namespace TenMat.Data
                     nextRoundMatches.Add(NewMatch(_draw[round][i].Winner,
                         _draw[round][i + 1].Winner,
                         nextRound));
+                }
+
+                if (nextRoundMatches.Count == 0)
+                {
+                    throw new InvalidOperationException("Should not happen.");
                 }
 
                 _draw.Add(nextRound, nextRoundMatches);

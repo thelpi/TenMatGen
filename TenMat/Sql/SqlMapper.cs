@@ -129,22 +129,20 @@ namespace TenMat.Sql
 
         /// <summary>
         /// Loads every matches of the specified player.
-        /// Walkover matches are excluded.
         /// </summary>
         /// <param name="player">Instance of <see cref="Player"/>.</param>
-        /// <param name="afterThat">Filters to matches player after this date (or the same day).</param>
-        /// <param name="dontReload">Doesn't load matches from database if <see cref="Player.MatchHistorySet"/> is <c>True</c>.</param>
+        /// <param name="matchesDateMin">Optionnal; minimal date of matches included.</param>
+        /// <param name="matchesDateMax">Optionnal; maximal date of matches included.</param>
+        /// <param name="includeWalkover">Optionnal; set <c>True</c> to include walkover matches.</param>
         /// <exception cref="ArgumentNullException"><paramref name="player"/> is <c>Null</c>.</exception>
-        public void LoadMatches(Player player, DateTime? afterThat, bool dontReload)
+        public void LoadMatches(Player player,
+            DateTime? matchesDateMin = null,
+            DateTime? matchesDateMax = null,
+            bool includeWalkover = false)
         {
             if (player == null)
             {
                 throw new ArgumentNullException(nameof(player));
-            }
-
-            if (dontReload && player.MatchHistorySet)
-            {
-                return;
             }
 
             List<MatchArchive> matches = new List<MatchArchive>();
@@ -160,11 +158,20 @@ namespace TenMat.Sql
                 sbSql.AppendLine("INNER JOIN edition ON edition_id = edition.id");
                 sbSql.AppendLine("INNER JOIN match_score AS ms ON mg.id = ms.match_id");
                 sbSql.AppendLine("INNER JOIN match_stat AS mt ON mg.id = mt.match_id");
-                sbSql.AppendLine("WHERE (winner_id = @pid OR loser_id = @pid) AND walkover = 0 ");
-                if (afterThat.HasValue)
+                sbSql.AppendLine("WHERE (winner_id = @pid OR loser_id = @pid)");
+                if (!includeWalkover)
                 {
-                    sbSql.AppendLine("AND edition.date_begin >= @date");
-                    command.AddDateTimeParameter("@date", afterThat.Value);
+                    sbSql.AppendLine("AND walkover = 0");
+                }
+                if (matchesDateMin.HasValue)
+                {
+                    sbSql.AppendLine("AND edition.date_begin >= @datemin");
+                    command.AddDateTimeParameter("@datemin", matchesDateMin.Value);
+                }
+                if (matchesDateMax.HasValue)
+                {
+                    sbSql.AppendLine("AND edition.date_begin <= @datemax");
+                    command.AddDateTimeParameter("@datemax", matchesDateMax.Value);
                 }
                 command.CommandText = sbSql.ToString();
                 command.AddParameter("@pid", player.Id, DbType.UInt32);
