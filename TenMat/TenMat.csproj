@@ -49,6 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\CompetitionArchive.cs" />
+    <Compile Include="Data\CompetitionBase.cs" />
     <Compile Include="Data\Enums\BestOfEnum.cs" />
     <Compile Include="Data\Competition.cs" />
     <Compile Include="Data\Enums\FifthSetTieBreakRuleEnum.cs" />

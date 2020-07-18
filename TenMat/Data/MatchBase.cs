@@ -9,14 +9,9 @@ namespace TenMat.Data
     public abstract class MatchBase
     {
         /// <summary>
-        /// Surface.
+        /// <see cref="Competition"/> instance.
         /// </summary>
-        public SurfaceEnum Surface { get; }
-
-        /// <summary>
-        /// Competition level.
-        /// </summary>
-        public LevelEnum Level { get; }
+        protected CompetitionBase Competition { get; }
 
         /// <summary>
         /// Round.
@@ -24,31 +19,15 @@ namespace TenMat.Data
         public RoundEnum Round { get; }
 
         /// <summary>
-        /// Sets best-of.
-        /// </summary>
-        public BestOfEnum BestOf { get; }
-
-        /// <summary>
-        /// Tournament beginning date.
-        /// </summary>
-        public DateTime TournamentBeginningDate { get; }
-
-        /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="surface">The <see cref="Surface"/> value.</param>
-        /// <param name="level">The <see cref="Level"/> value.</param>
+        /// <param name="competition">The <see cref="Competition"/> value.</param>
         /// <param name="round">The <see cref="Round"/> value.</param>
-        /// <param name="bestOf">The <see cref="BestOf"/> value.</param>
-        /// <param name="tournamentBeginningDate">The <see cref="TournamentBeginningDate"/> value.</param>
-        protected MatchBase(SurfaceEnum surface, LevelEnum level, RoundEnum round,
-            BestOfEnum bestOf, DateTime tournamentBeginningDate)
+        /// <exception cref="ArgumentNullException"><paramref name="competition"/> is <c>Null</c>.</exception>
+        protected MatchBase(CompetitionBase competition, RoundEnum round)
         {
-            Surface = surface;
-            Level = level;
+            Competition = competition ?? throw new ArgumentNullException(nameof(competition));
             Round = round;
-            BestOf = bestOf;
-            TournamentBeginningDate = tournamentBeginningDate;
         }
     }
 }

@@ -13,6 +13,7 @@ namespace TenMatGui
         public LevelEnum Level { get; set; }
         public FifthSetTieBreakRuleEnum FifthSetTieBreakRule { get; set; }
         public SurfaceEnum Surface { get; set; }
+        public bool IsIndoor { get; set; }
         public IReadOnlyCollection<Player> Players { get; set; }
         public BestOfEnum BestOf { get; set; }
         public BestOfEnum FinalBestOf { get; set; }

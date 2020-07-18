@@ -150,13 +150,14 @@ namespace TenMat.Sql
             GenericLoad((command) =>
             {
                 var sbSql = new StringBuilder();
-                sbSql.AppendLine("SELECT best_of, winner_id, loser_id, round_id,");
-                sbSql.AppendLine("edition.date_begin, edition.level_id, edition.surface_id,");
+                sbSql.AppendLine("SELECT winner_id, loser_id, round_id,");
+                sbSql.AppendLine("e.date_begin, e.level_id, e.surface_id,");
                 sbSql.AppendLine("w_set_1, l_set_1, tb_set_1, w_set_2, l_set_2, tb_set_2,");
                 sbSql.AppendLine("w_set_3, l_set_3, tb_set_3, w_set_4, l_set_4, tb_set_4,");
-                sbSql.AppendLine("w_set_5, l_set_5, tb_set_5, w_sv_gms, l_sv_gms");
+                sbSql.AppendLine("w_set_5, l_set_5, tb_set_5, w_sv_gms, l_sv_gms,");
+                sbSql.AppendLine("e.id, e.indoor, best_of");
                 sbSql.AppendLine("FROM match_general AS mg");
-                sbSql.AppendLine("INNER JOIN edition ON edition_id = edition.id");
+                sbSql.AppendLine("INNER JOIN edition AS e ON edition_id = e.id");
                 sbSql.AppendLine("INNER JOIN match_score AS ms ON mg.id = ms.match_id");
                 sbSql.AppendLine("INNER JOIN match_stat AS mt ON mg.id = mt.match_id");
                 sbSql.AppendLine("WHERE (winner_id = @pid OR loser_id = @pid)");
@@ -166,12 +167,12 @@ namespace TenMat.Sql
                 }
                 if (matchesDateMin.HasValue)
                 {
-                    sbSql.AppendLine("AND edition.date_begin >= @datemin");
+                    sbSql.AppendLine("AND e.date_begin >= @datemin");
                     command.AddDateTimeParameter("@datemin", matchesDateMin.Value);
                 }
                 if (matchesDateMax.HasValue)
                 {
-                    sbSql.AppendLine("AND edition.date_begin <= @datemax");
+                    sbSql.AppendLine("AND e.date_begin <= @datemax");
                     command.AddDateTimeParameter("@datemax", matchesDateMax.Value);
                 }
                 command.CommandText = sbSql.ToString();
@@ -179,9 +180,12 @@ namespace TenMat.Sql
             }, (reader) =>
             {
                 var sets = new List<Tuple<uint, uint, uint?>>();
-                for (int i = 1; i <= 5; i++)
+                bool haveSet = true;
+                int i = 1;
+                while (i <= 5 && haveSet)
                 {
-                    if (!reader.IsDBNull($"w_set_{i}") || !reader.IsDBNull($"w_set_{i}"))
+                    haveSet = !reader.IsDBNull($"w_set_{i}") || !reader.IsDBNull($"w_set_{i}");
+                    if (haveSet)
                     {
                         sets.Add(new Tuple<uint, uint, uint?>(
                             reader.Get<uint?>($"w_set_{i}").GetValueOrDefault(0),
@@ -189,17 +193,22 @@ namespace TenMat.Sql
                             reader.Get<uint?>($"tb_set_{i}")
                         ));
                     }
-                    else
-                    {
-                        break;
-                    }
+                    i++;
                 }
 
-                matches.Add(new MatchArchive(reader.Get<SurfaceEnum>("surface_id"),
+                var competition = CompetitionArchive.CreateNewOrGet(
+                    reader.Get<uint>("id"),
+                    reader.Get<SurfaceEnum>("surface_id"),
+                    reader.Get<bool>("indoor"),
                     reader.Get<LevelEnum>("level_id"),
-                    reader.Get<RoundEnum>("round_id"),
-                    (BestOfEnum)reader.Get<uint>("best_of"),
                     reader.Get<DateTime>("date_begin"),
+                    reader.Get<BestOfEnum>("best_of"),
+                    reader.Get<RoundEnum>("round_id") == RoundEnum.F
+                );
+
+                matches.Add(new MatchArchive(
+                    competition,
+                    reader.Get<RoundEnum>("round_id"),
                     reader.Get<uint>("winner_id"),
                     reader.Get<uint>("loser_id"),
                     sets,

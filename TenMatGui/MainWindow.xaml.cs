@@ -74,6 +74,7 @@ namespace TenMatGui
                     arg.Level,
                     arg.FifthSetTieBreakRule,
                     arg.Surface,
+                    arg.IsIndoor,
                     arg.Players,
                     arg.BestOf,
                     arg.FinalBestOf,
@@ -158,7 +159,8 @@ namespace TenMatGui
                 Level = (LevelEnum)CbbLevel.SelectedItem,
                 Players = _players.Take(drawSize).ToList(),
                 SeedRate = seedRate,
-                Surface = (SurfaceEnum)CbbSurface.SelectedItem
+                Surface = (SurfaceEnum)CbbSurface.SelectedItem,
+                IsIndoor = ChkIndoor.IsChecked == true 
             });
         }
 
@@ -171,6 +173,7 @@ namespace TenMatGui
             CbbFifthSetRule.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(FifthSetTieBreakRuleEnum)).Length);
             CbbLevel.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(LevelEnum)).Length);
             CbbSurface.SelectedIndex = Tools.Rdm.Next(0, Enum.GetValues(typeof(SurfaceEnum)).Length);
+            ChkIndoor.IsChecked = Tools.FlipCoin();
         }
 
         private void SetCbbSeedRateFromDrawSize(uint drawSize)

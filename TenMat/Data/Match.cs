@@ -31,6 +31,16 @@ namespace TenMat.Data
         private readonly bool _p2IsFirstToServe;
 
         /// <summary>
+        /// Competition.
+        /// </summary>
+        public new Competition Competition
+        {
+            get
+            {
+                return (Competition)base.Competition;
+            }
+        }
+        /// <summary>
         /// Gets the winner of the match (if finished).
         /// </summary>
         public Player Winner
@@ -64,11 +74,6 @@ namespace TenMat.Data
         /// <exception cref="ArgumentException">Players should not be the same.</exception>
         public static Match CreateNew(Player p1, Player p2, Competition competition, RoundEnum round)
         {
-            if (competition == null)
-            {
-                throw new ArgumentNullException(nameof(competition));
-            }
-
             if (p1 == null)
             {
                 throw new ArgumentNullException(nameof(p1));
@@ -79,15 +84,11 @@ namespace TenMat.Data
                 throw new ArgumentException("Players should not be the same.", nameof(p2));
             }
 
-            return new Match(p1, p2, competition.Surface, competition.Level, round,
-                round == RoundEnum.F ? competition.FinalBestOf : competition.BestOf,
-                competition.Date, competition.FifthSetTieBreakRule, competition.PointByPoint);
+            return new Match(competition, p1, p2, round);
         }
         
-        private Match(Player p1, Player p2, SurfaceEnum surface, LevelEnum level,
-            RoundEnum round, BestOfEnum bestOf, DateTime tournamentBeginningDate,
-            FifthSetTieBreakRuleEnum fifthSetTieBreakRule, bool pointByPoint)
-            : base(surface, level, round, bestOf, tournamentBeginningDate)
+        private Match(Competition competition, Player p1, Player p2, RoundEnum round)
+            : base(competition, round)
         {
             _p2IsFirstToServe = Tools.FlipCoin();
             _playerOne = p1;
@@ -95,7 +96,10 @@ namespace TenMat.Data
             _p1TieBreakRate = 1;
             if (p2 != null)
             {
-                _scoreboard = new Scoreboard(bestOf, _p2IsFirstToServe, fifthSetTieBreakRule, pointByPoint);
+                _scoreboard = new Scoreboard(competition.GetBestOf(round),
+                    _p2IsFirstToServe,
+                    competition.FifthSetTieBreakRule,
+                    competition.PointByPoint);
                 _p1ServeRate = ComputeSvGameRate(_playerOne);
                 _p2ServeRate = ComputeSvGameRate(_playerTwo);
                 double p1TieBreakRate = ComputeTieBreakRate(_playerOne);
@@ -157,7 +161,7 @@ namespace TenMat.Data
 
             var sb = new StringBuilder();
             sb.AppendLine(string.Concat(_playerOne.Name, " - ", _playerTwo.Name));
-            sb.AppendLine(string.Concat(Surface, " - ", Level, " - ", Round));
+            sb.AppendLine(string.Concat(Competition.Surface, " - ", Competition.Level, " - ", Round));
             if (_playerTwo != null)
             {
                 sb.AppendLine(_scoreboard.ToString());
@@ -175,29 +179,29 @@ namespace TenMat.Data
             uint oppId = p.Id == _playerOne.Id ? _playerTwo.Id : _playerOne.Id;
 
             var rateCoefficients = new List<double>();
-            if (p.SvGameRateByLevel[Level].HasValue)
+            if (p.SvGameRateByLevel[Competition.Level].HasValue)
             {
-                rateCoefficients.Add(p.SvGameRateByLevel[Level].Value * RATE_COEFF_LEVEL);
+                rateCoefficients.Add(p.SvGameRateByLevel[Competition.Level].Value * RATE_COEFF_LEVEL);
             }
             if (p.SvGameRateByRound[Round].HasValue)
             {
                 rateCoefficients.Add(p.SvGameRateByRound[Round].Value * RATE_COEFF_ROUND);
             }
-            if (p.SvGameRateByBestOf[BestOf].HasValue)
+            if (p.SvGameRateByBestOf[Competition.BestOf].HasValue)
             {
-                rateCoefficients.Add(p.SvGameRateByBestOf[BestOf].Value * RATE_COEFF_BESTOF);
+                rateCoefficients.Add(p.SvGameRateByBestOf[Competition.BestOf].Value * RATE_COEFF_BESTOF);
             }
-            if (p.SvGameRateByYear[TournamentBeginningDate.Year].HasValue)
+            if (p.SvGameRateByYear[Competition.Date.Year].HasValue)
             {
-                rateCoefficients.Add(p.SvGameRateByYear[TournamentBeginningDate.Year].Value * RATE_COEFF_YEAR);
+                rateCoefficients.Add(p.SvGameRateByYear[Competition.Date.Year].Value * RATE_COEFF_YEAR);
             }
             if (p.SvGameRateByOpponent.ContainsKey(oppId) && p.SvGameRateByOpponent[oppId].HasValue)
             {
                 rateCoefficients.Add(p.SvGameRateByOpponent[oppId].Value * RATE_COEFF_OPPONENT);
             }
-            if (p.SvGameRateBySurface[Surface].HasValue)
+            if (p.SvGameRateBySurface[Competition.Surface].HasValue)
             {
-                rateCoefficients.Add(p.SvGameRateBySurface[Surface].Value * RATE_COEFF_SURFACE);
+                rateCoefficients.Add(p.SvGameRateBySurface[Competition.Surface].Value * RATE_COEFF_SURFACE);
             }
 
             if (rateCoefficients.Count == 0)
@@ -213,29 +217,29 @@ namespace TenMat.Data
             uint oppId = p.Id == _playerOne.Id ? _playerTwo.Id : _playerOne.Id;
 
             var rateCoefficients = new List<double>();
-            if (p.TieBreakRateByLevel[Level].HasValue)
+            if (p.TieBreakRateByLevel[Competition.Level].HasValue)
             {
-                rateCoefficients.Add(p.TieBreakRateByLevel[Level].Value * RATE_COEFF_LEVEL);
+                rateCoefficients.Add(p.TieBreakRateByLevel[Competition.Level].Value * RATE_COEFF_LEVEL);
             }
             if (p.TieBreakRateByRound[Round].HasValue)
             {
                 rateCoefficients.Add(p.TieBreakRateByRound[Round].Value * RATE_COEFF_ROUND);
             }
-            if (p.SvGameRateByBestOf[BestOf].HasValue)
+            if (p.SvGameRateByBestOf[Competition.BestOf].HasValue)
             {
-                rateCoefficients.Add(p.SvGameRateByBestOf[BestOf].Value * RATE_COEFF_BESTOF);
+                rateCoefficients.Add(p.SvGameRateByBestOf[Competition.BestOf].Value * RATE_COEFF_BESTOF);
             }
-            if (p.TieBreakRateByYear[TournamentBeginningDate.Year].HasValue)
+            if (p.TieBreakRateByYear[Competition.Date.Year].HasValue)
             {
-                rateCoefficients.Add(p.TieBreakRateByYear[TournamentBeginningDate.Year].Value * RATE_COEFF_YEAR);
+                rateCoefficients.Add(p.TieBreakRateByYear[Competition.Date.Year].Value * RATE_COEFF_YEAR);
             }
             if (p.TieBreakRateByOpponent.ContainsKey(oppId) && p.TieBreakRateByOpponent[oppId].HasValue)
             {
                 rateCoefficients.Add(p.TieBreakRateByOpponent[oppId].Value * RATE_COEFF_OPPONENT);
             }
-            if (p.TieBreakRateBySurface[Surface].HasValue)
+            if (p.TieBreakRateBySurface[Competition.Surface].HasValue)
             {
-                rateCoefficients.Add(p.TieBreakRateBySurface[Surface].Value * RATE_COEFF_SURFACE);
+                rateCoefficients.Add(p.TieBreakRateBySurface[Competition.Surface].Value * RATE_COEFF_SURFACE);
             }
 
             if (rateCoefficients.Count == 0)

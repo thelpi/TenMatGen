@@ -149,12 +149,12 @@ namespace TenMat.Data
             ComputeGameRateByCriterion(
                 _svGameRateBySurface, _tieBreakRateBySurface,
                 Enum.GetValues(typeof(SurfaceEnum)).Cast<SurfaceEnum>(),
-                s => _matchHistoryList.Where(m => m.Surface == s)
+                s => _matchHistoryList.Where(m => m.Competition.Surface == s)
             );
             ComputeGameRateByCriterion(
                 _svGameRateByLevel, _tieBreakRateByLevel,
                 Enum.GetValues(typeof(LevelEnum)).Cast<LevelEnum>(),
-                l => _matchHistoryList.Where(m => m.Level == l)
+                l => _matchHistoryList.Where(m => m.Competition.Level == l)
             );
             ComputeGameRateByCriterion(
                 _svGameRateByOpponent, _tieBreakRateByOpponent,
@@ -164,12 +164,12 @@ namespace TenMat.Data
             ComputeGameRateByCriterion(
                 _svGameRateByYear, _tieBreakRateByYear,
                 Enumerable.Range(Tools.OPEN_ERA_YEAR, DateTime.Now.Year - Tools.OPEN_ERA_YEAR),
-                y => _matchHistoryList.Where(m => m.TournamentBeginningDate.Year == y)
+                y => _matchHistoryList.Where(m => m.Competition.Date.Year == y)
             );
             ComputeGameRateByCriterion(
                 _svGameRateByBestOf, _tieBreakRateByBestOf,
                 Enum.GetValues(typeof(BestOfEnum)).Cast<BestOfEnum>(),
-                b => _matchHistoryList.Where(m => m.BestOf == b)
+                b => _matchHistoryList.Where(m => m.Competition.BestOf == b)
             );
             ComputeGameRateByCriterion(
                 _svGameRateByRound, _tieBreakRateByRound,

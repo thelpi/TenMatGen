@@ -33,6 +33,16 @@ namespace TenMat.Data
         public uint? LoserSvGameCount { get; }
 
         /// <summary>
+        /// Competition.
+        /// </summary>
+        public new CompetitionArchive Competition
+        {
+            get
+            {
+                return (CompetitionArchive)base.Competition;
+            }
+        }
+        /// <summary>
         /// Games count, minus tie-breaks.
         /// </summary>
         public int GamesCount
@@ -66,11 +76,8 @@ namespace TenMat.Data
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="surface">The <see cref="MatchBase.Surface"/> value.</param>
-        /// <param name="level">The <see cref="MatchBase.Level"/> value.</param>
+        /// <param name="competition">The <see cref="MatchBase.Competition"/> value.</param>
         /// <param name="round">The <see cref="MatchBase.Round"/> value.</param>
-        /// <param name="bestOf">The <see cref="MatchBase.BestOf"/> value.</param>
-        /// <param name="tournamentBeginningDate">The <see cref="MatchBase.TournamentBeginningDate"/> value.</param>
         /// <param name="winnerId">The <see cref="WinnerId"/> value.</param>
         /// <param name="loserId">The <see cref="LoserId"/> value.</param>
         /// <param name="sets">Collection of set informations; respectively, for each set:
@@ -82,14 +89,15 @@ namespace TenMat.Data
         /// </param>
         /// <param name="winnerSvGameCount">The <see cref="WinnerSvGameCount"/> value.</param>
         /// <param name="loserSvGameCount">The <see cref="LoserSvGameCount"/> value.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="competition"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="sets"/> is <c>Null</c>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="sets"/> count should be lower than six.</exception>
         /// <exception cref="ArgumentException"><paramref name="sets"/> detail should not be null.</exception>
-        public MatchArchive(SurfaceEnum surface, LevelEnum level, RoundEnum round,
-            BestOfEnum bestOf, DateTime tournamentBeginningDate,
-            uint winnerId, uint loserId, IEnumerable<Tuple<uint, uint, uint?>> sets,
+        public MatchArchive(CompetitionArchive competition, RoundEnum round,
+            uint winnerId, uint loserId,
+            IEnumerable<Tuple<uint, uint, uint?>> sets,
             uint? winnerSvGameCount, uint? loserSvGameCount)
-            : base(surface, level, round, bestOf, tournamentBeginningDate)
+            : base(competition, round)
         {
             if (sets == null)
             {
