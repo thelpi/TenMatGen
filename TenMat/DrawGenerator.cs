@@ -68,7 +68,8 @@ namespace TenMat
                 matchesBySeed.Add(GenerateMatchesForSeededPlayers(seededPlayersBySeedValue[i], unseededPlayers, i > 0));
             }
 
-            IEnumerable<Tuple<int, int>> matchesIndex = FillDraw(matchesBySeed, GenerateUnseededMatches(unseededPlayers).ToList());
+            List<Tuple<int, int>> unseededMatches = GenerateUnseededMatches(unseededPlayers).ToList();
+            IEnumerable<Tuple<int, int>> matchesIndex = matchesBySeed.Count == 0 ? unseededMatches : FillDraw(matchesBySeed, unseededMatches);
 
             List<Tuple<int, int>> matchesIndexFixed = matchesIndex.ToList();
             var matches = new List<TMatch>();
